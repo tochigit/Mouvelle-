@@ -6,6 +6,7 @@ import { HomePage } from '@/components/home/HomePage';
 import ShopPage from '@/components/shop/ShopPage';
 import ProductDetailPage from '@/components/product/ProductDetailPage';
 import CartPage from '@/components/cart/CartPage';
+import CartSidebar from '@/components/cart/CartSidebar';
 import CheckoutPage from '@/components/checkout/CheckoutPage';
 import OrderConfirmation from '@/components/checkout/OrderConfirmation';
 import Header from '@/components/layout/Header';
@@ -60,6 +61,3 @@ export default function Home() {
     </div>
   );
 }
-
-// Lazy import to avoid circular deps
-import CartSidebar from '@/components/cart/CartSidebar';

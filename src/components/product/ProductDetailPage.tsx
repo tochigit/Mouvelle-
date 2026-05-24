@@ -72,8 +72,8 @@ export default function ProductDetailPage() {
         setLoading(false);
 
         // Set default selected variants
-        const colors = data.product.variants.filter((v: { variantType: string }) => v.variantType === 'color');
-        const sizes = data.product.variants.filter((v: { variantType: string }) => v.variantType === 'size');
+        const colors = (data.product.variants ?? []).filter((v: { variantType: string }) => v.variantType === 'color');
+        const sizes = (data.product.variants ?? []).filter((v: { variantType: string }) => v.variantType === 'size');
         if (colors.length > 0) setSelectedColor(colors[0].variantValue);
         if (sizes.length > 0) setSelectedSize(sizes[0].variantValue);
 
@@ -190,9 +190,12 @@ export default function ProductDetailPage() {
 
   const priceInfo = formatPriceWithDiscount(product.price, product.discountPrice);
   const stockStatus = getStockStatus();
-  const colors = product.variants.filter((v) => v.variantType === 'color');
-  const sizes = product.variants.filter((v) => v.variantType === 'size');
-  const ratingDistribution = getRatingDistribution(product.reviews);
+  const productImages = product.images ?? [];
+  const productVariants = product.variants ?? [];
+  const productReviews = product.reviews ?? [];
+  const colors = productVariants.filter((v) => v.variantType === 'color');
+  const sizes = productVariants.filter((v) => v.variantType === 'size');
+  const ratingDistribution = getRatingDistribution(productReviews);
 
   const colorMap: Record<string, string> = {
     'Black': '#1A1A1A', 'White': '#FFFFFF', 'Gold': '#D4AF37', 'Rose Gold': '#B76E79',
@@ -238,7 +241,7 @@ export default function ProductDetailPage() {
             <div className="flex gap-3">
               {/* Thumbnail Strip (Desktop) */}
               <div className="hidden lg:flex flex-col gap-2 w-16">
-                {product.images.map((img, i) => (
+                {productImages.map((img, i) => (
                   <button
                     key={img.id}
                     onClick={() => setSelectedImageIndex(i)}
@@ -275,7 +278,7 @@ export default function ProductDetailPage() {
                     className="w-full h-full relative"
                   >
                     <Image
-                      src={product.images[selectedImageIndex]?.imageUrl || ''}
+                      src={productImages[selectedImageIndex]?.imageUrl || ''}
                       alt={product.title}
                       fill
                       unoptimized
@@ -306,7 +309,7 @@ export default function ProductDetailPage() {
 
             {/* Mobile Thumbnails */}
             <div className="flex gap-2 mt-3 lg:hidden overflow-x-auto pb-2">
-              {product.images.map((img, i) => (
+              {productImages.map((img, i) => (
                 <button
                   key={img.id}
                   onClick={() => setSelectedImageIndex(i)}
@@ -678,13 +681,13 @@ export default function ProductDetailPage() {
 
             {/* Individual Reviews */}
             <div className="lg:col-span-2">
-              {product.reviews.length === 0 ? (
+              {productReviews.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-muted-foreground">No reviews yet. Be the first to review this product!</p>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {product.reviews.map((review) => (
+                  {productReviews.map((review) => (
                     <motion.div
                       key={review.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -735,7 +738,7 @@ export default function ProductDetailPage() {
                   >
                     <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-card mb-2">
                       <Image
-                        src={rp.images[0]?.imageUrl || ''}
+                        src={rp.images?.[0]?.imageUrl || ''}
                         alt={rp.title}
                         fill
                         unoptimized

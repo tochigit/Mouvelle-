@@ -39,10 +39,10 @@ export default function QuickView({ product, open, onOpenChange }: QuickViewProp
     product.discountPrice
   );
 
-  const mainImage = product.images.find((img) => img.position === 0)?.imageUrl || product.images[0]?.imageUrl || '';
+  const mainImage = product.images?.find((img) => img.position === 0)?.imageUrl || product.images?.[0]?.imageUrl || '';
 
-  const colors = product.variants.filter((v) => v.variantType === 'color');
-  const sizes = product.variants.filter((v) => v.variantType === 'size');
+  const colors = (product.variants ?? []).filter((v) => v.variantType === 'color');
+  const sizes = (product.variants ?? []).filter((v) => v.variantType === 'size');
 
   const defaultColor = colors[0]?.variantValue ?? null;
   const defaultSize = sizes[0]?.variantValue ?? null;
@@ -50,10 +50,8 @@ export default function QuickView({ product, open, onOpenChange }: QuickViewProp
   const activeColor = selectedColor ?? defaultColor;
   const activeSize = selectedSize ?? defaultSize;
 
-  const avgRating =
-    product.reviews.length > 0
-      ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
-      : 0;
+  const avgRating = product.avgRating ?? 0;
+  const reviewCount = product.reviewCount ?? 0;
 
   const handleAddToCart = () => {
     addItem({
@@ -109,7 +107,7 @@ export default function QuickView({ product, open, onOpenChange }: QuickViewProp
               </DialogTitle>
               {avgRating > 0 && (
                 <div className="flex items-center gap-2 pt-1">
-                  <StarRating rating={avgRating} count={product.reviews.length} size="sm" />
+                  <StarRating rating={avgRating} count={reviewCount} size="sm" />
                 </div>
               )}
             </DialogHeader>

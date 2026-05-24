@@ -32,15 +32,15 @@ export default function ProductCard({ product }: ProductCardProps) {
     product.discountPrice
   );
 
-  const avgRating =
-    product.reviews.length > 0
-      ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
-      : 0;
+  const avgRating = product.avgRating ?? 0;
+  const reviewCount = product.reviewCount ?? 0;
 
-  const mainImage = product.images.find((img) => img.position === 0)?.imageUrl || product.images[0]?.imageUrl || '';
+  const images = product.images ?? [];
+  const variants = product.variants ?? [];
+  const mainImage = images.find((img) => img.position === 0)?.imageUrl || images[0]?.imageUrl || '';
 
-  const colors = product.variants.filter((v) => v.variantType === 'color');
-  const sizes = product.variants.filter((v) => v.variantType === 'size');
+  const colors = variants.filter((v) => v.variantType === 'color');
+  const sizes = variants.filter((v) => v.variantType === 'size');
   const defaultColor = colors[0]?.variantValue ?? null;
   const defaultSize = sizes[0]?.variantValue ?? null;
 
@@ -161,7 +161,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {avgRating > 0 && (
-            <StarRating rating={avgRating} count={product.reviews.length} size="sm" />
+            <StarRating rating={avgRating} count={reviewCount} size="sm" />
           )}
 
           {/* Add to Cart Button */}

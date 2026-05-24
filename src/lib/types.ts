@@ -43,6 +43,8 @@ export interface Product {
   images: ProductImage[];
   variants: ProductVariant[];
   reviews: Review[];
+  avgRating: number;
+  reviewCount: number;
   createdAt: string;
   updatedAt: string;
 }
