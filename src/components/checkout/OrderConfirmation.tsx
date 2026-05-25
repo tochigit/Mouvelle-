@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useNavigationStore } from '@/stores/navigation';
+import { useOrderStore } from '@/stores/order';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Check, ShoppingBag, Truck, ArrowRight } from 'lucide-react';
@@ -9,9 +10,13 @@ import { getDeliveryTimeline } from '@/lib/format';
 
 export default function OrderConfirmation() {
   const { navigate } = useNavigationStore();
+  const { lastOrderNumber, lastShippingState } = useOrderStore();
 
-  // Generate a pseudo order number
-  const orderNumber = `ELR-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  // Use the real order number from the store, fallback if not available
+  const orderNumber = lastOrderNumber || 'ELR-PENDING';
+
+  // Use the shipping state from the order for delivery timeline, fallback to 'default'
+  const deliveryState = lastShippingState || 'default';
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -78,7 +83,7 @@ export default function OrderConfirmation() {
               <div className="text-left">
                 <p className="font-medium">Estimated Delivery</p>
                 <p className="text-muted-foreground text-xs">
-                  Your order will be delivered within {getDeliveryTimeline('default')}. You can track your order status anytime.
+                  Your order will be delivered within {getDeliveryTimeline(deliveryState)}. You can track your order status anytime.
                 </p>
               </div>
             </div>

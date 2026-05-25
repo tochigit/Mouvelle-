@@ -29,6 +29,8 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ReviewFormDialog from '@/components/product/ReviewFormDialog';
+import SizeGuideDialog from '@/components/product/SizeGuideDialog';
 
 interface ProductWithDetails extends Product {
   avgRating: number;
@@ -49,6 +51,8 @@ export default function ProductDetailPage() {
   const [isZooming, setIsZooming] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
   const [relatedProducts, setRelatedProducts] = useState<ProductWithDetails[]>([]);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [sizeGuideDialogOpen, setSizeGuideDialogOpen] = useState(false);
   const mainImageRef = useRef<HTMLDivElement>(null);
 
   // Fetch product
@@ -109,6 +113,19 @@ export default function ProductDetailPage() {
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setZoomPos({ x, y });
   }, []);
+
+  // Refresh reviews after submission
+  const handleReviewSubmitted = () => {
+    if (!selectedProductId) return;
+    fetch(`/api/products/${selectedProductId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setProduct(data.product);
+      })
+      .catch(() => {
+        toast.error('Failed to refresh reviews');
+      });
+  };
 
   // Add to cart
   const handleAddToCart = () => {
@@ -422,7 +439,7 @@ export default function ProductDetailPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium">Size:</span>
-                    <button className="text-xs text-[#D4AF37] hover:underline">Size Guide</button>
+                    <button onClick={() => setSizeGuideDialogOpen(true)} className="text-xs text-[#D4AF37] hover:underline">Size Guide</button>
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     {sizes.map((v) => (
@@ -672,7 +689,7 @@ export default function ProductDetailPage() {
 
               <Button
                 variant="outline"
-                onClick={() => toast.info('Review feature coming soon!')}
+                onClick={() => setReviewDialogOpen(true)}
                 className="w-full border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10"
               >
                 Write a Review
@@ -720,6 +737,20 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Review Form Dialog */}
+        <ReviewFormDialog
+          open={reviewDialogOpen}
+          onOpenChange={setReviewDialogOpen}
+          productId={product.id}
+          onReviewSubmitted={handleReviewSubmitted}
+        />
+
+        {/* Size Guide Dialog */}
+        <SizeGuideDialog
+          open={sizeGuideDialogOpen}
+          onOpenChange={setSizeGuideDialogOpen}
+        />
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (

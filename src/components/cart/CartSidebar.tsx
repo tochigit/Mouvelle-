@@ -14,6 +14,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { ShoppingBag, Minus, Plus, X, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -53,6 +54,7 @@ export default function CartSidebar() {
                 </span>
               )}
             </SheetTitle>
+            <SheetDescription className="sr-only">Your shopping cart items</SheetDescription>
           </div>
         </SheetHeader>
 

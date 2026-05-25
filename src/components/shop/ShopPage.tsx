@@ -20,6 +20,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import {
@@ -39,7 +40,7 @@ import {
 import { toast } from 'sonner';
 
 export default function ShopPage() {
-  const { selectedCategory, setCategory, navigate } = useNavigationStore();
+  const { selectedCategory, setCategory, navigate, searchQuery, setSearchQuery } = useNavigationStore();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +52,14 @@ export default function ShopPage() {
   const [priceMax, setPriceMax] = useState('');
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
+
+  // Sync search query from navigation (e.g. from header search dialog)
+  useEffect(() => {
+    if (searchQuery) {
+      setSearch(searchQuery);
+      setSearchQuery(null);
+    }
+  }, [searchQuery, setSearchQuery]);
 
   // Sync category from navigation
   useEffect(() => {
@@ -142,6 +151,7 @@ export default function ShopPage() {
     setInStockOnly(false);
     setSearch('');
     setCategory(null);
+    setSearchQuery(null);
   };
 
   // Active filters
@@ -289,6 +299,7 @@ export default function ShopPage() {
               <SheetContent side="left" className="w-80 bg-background">
                 <SheetHeader>
                   <SheetTitle className="font-serif text-xl">Filters</SheetTitle>
+                  <SheetDescription className="sr-only">Filter products by category and price</SheetDescription>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100vh-100px)] px-4">
                   <FilterContent />

@@ -73,6 +73,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  orderNumber: string;
   guestEmail?: string;
   guestName?: string;
   guestPhone?: string;

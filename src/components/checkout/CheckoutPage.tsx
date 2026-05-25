@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigationStore } from '@/stores/navigation';
 import { useCartStore } from '@/stores/cart';
+import { useOrderStore } from '@/stores/order';
 import { formatPrice, getDeliveryFee, getDeliveryTimeline } from '@/lib/format';
 import { NIGERIAN_STATES, FREE_DELIVERY_THRESHOLD } from '@/lib/constants';
 import type { CheckoutInfo } from '@/lib/types';
@@ -37,6 +38,7 @@ import { toast } from 'sonner';
 export default function CheckoutPage() {
   const { navigate } = useNavigationStore();
   const { items, getSubtotal, clearCart, getItemCount } = useCartStore();
+  const { setLastOrder } = useOrderStore();
 
   const subtotal = getSubtotal();
   const itemCount = getItemCount();
@@ -136,6 +138,7 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       setOrderId(data.order.id);
+      setLastOrder(data.order.id, data.order.orderNumber, checkoutInfo.state);
       clearCart();
 
       if (checkoutInfo.paymentMethod === 'paystack') {

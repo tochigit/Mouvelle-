@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Heart, ShoppingBag, Menu, Sun, Moon, User, ChevronRight } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
@@ -14,8 +14,17 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 
 const NAV_LINKS = [
@@ -28,10 +37,14 @@ const NAV_LINKS = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const hydrated = useHydrated();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigationStore((s) => s.navigate);
+  const setSearchQuery = useNavigationStore((s) => s.setSearchQuery);
   const itemCount = useCartStore((s) => s.getItemCount());
   const wishlistItems = useWishlistStore((s) => s.items);
 
@@ -43,9 +56,49 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Keyboard shortcut: Cmd/Ctrl+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Auto-focus search input when dialog opens
+  useEffect(() => {
+    if (isSearchOpen) {
+      // Small delay to let the dialog animation complete
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isSearchOpen]);
+
   const handleNavClick = (page: Parameters<typeof navigate>[0]) => {
     navigate(page);
     setIsMobileMenuOpen(false);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      setSearchQuery(searchInput.trim());
+      navigate('shop');
+      setIsSearchOpen(false);
+      setSearchInput('');
+    }
+  };
+
+  const handleSearchOpenChange = (open: boolean) => {
+    setIsSearchOpen(open);
+    if (!open) {
+      setSearchInput('');
+    }
   };
 
   return (
@@ -99,6 +152,7 @@ export default function Header() {
                 variant="ghost"
                 size="icon"
                 className="hidden lg:flex"
+                onClick={() => setIsSearchOpen(true)}
                 aria-label="Search"
               >
                 <Search className="size-5" />
@@ -138,6 +192,41 @@ export default function Header() {
         </div>
       </motion.header>
 
+      {/* Search Dialog */}
+      <Dialog open={isSearchOpen} onOpenChange={handleSearchOpenChange}>
+        <DialogContent className="sm:max-w-lg top-[20%] translate-y-0" showCloseButton={false}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Search Products</DialogTitle>
+            <DialogDescription>Search for products across our store</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSearchSubmit} className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
+              <Input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search for products..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pl-11 h-12 text-base border-[#D4AF37]/30 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20"
+                autoFocus
+              />
+            </div>
+            <Button
+              type="submit"
+              size="default"
+              className="h-12 px-6 bg-[#D4AF37] text-[#1A1A1A] hover:bg-[#C0A030] shrink-0"
+            >
+              Search
+            </Button>
+          </form>
+          <p className="text-xs text-muted-foreground text-center">
+            Press <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px] font-mono">Enter</kbd> to search or{' '}
+            <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px] font-mono">Esc</kbd> to close
+          </p>
+        </DialogContent>
+      </Dialog>
+
       {/* Mobile Menu Sheet */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent side="left" className="w-80 bg-background p-0">
@@ -145,9 +234,28 @@ export default function Header() {
             <SheetTitle className="font-serif text-2xl font-bold text-[#D4AF37] tracking-[0.15em] uppercase text-left">
               {BRAND_NAME}
             </SheetTitle>
+            <SheetDescription className="sr-only">Navigation menu</SheetDescription>
           </SheetHeader>
 
           <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
+            {/* Search in Mobile Menu */}
+            <div className="px-6 py-2">
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsSearchOpen(true);
+                }}
+                className="flex items-center gap-3 w-full py-2.5 text-sm text-foreground hover:text-[#D4AF37] transition-colors"
+              >
+                <Search className="size-4" />
+                <span className="uppercase tracking-[0.1em] text-xs font-medium">
+                  Search
+                </span>
+              </button>
+            </div>
+
+            <Separator className="mx-6" />
+
             {/* Navigation Links */}
             <nav className="px-6 py-4">
               {NAV_LINKS.map((link) => (

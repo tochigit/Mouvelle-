@@ -20,14 +20,30 @@ export function Newsletter() {
     }
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    setIsSuccess(true);
-    toast.success(`Welcome to the ${BRAND_NAME} Circle! Check your inbox for 10% off.`);
-    setEmail('');
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
 
-    setTimeout(() => setIsSuccess(false), 3000);
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || 'Something went wrong. Please try again.');
+        return;
+      }
+
+      setIsSuccess(true);
+      toast.success(`Welcome to the ${BRAND_NAME} Circle! Check your inbox for 10% off.`);
+      setEmail('');
+
+      setTimeout(() => setIsSuccess(false), 3000);
+    } catch {
+      toast.error('Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

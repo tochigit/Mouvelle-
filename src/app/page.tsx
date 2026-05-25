@@ -9,6 +9,8 @@ import CartPage from '@/components/cart/CartPage';
 import CartSidebar from '@/components/cart/CartSidebar';
 import CheckoutPage from '@/components/checkout/CheckoutPage';
 import OrderConfirmation from '@/components/checkout/OrderConfirmation';
+import WishlistPage from '@/components/wishlist/WishlistPage';
+import AccountPage from '@/components/account/AccountPage';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MobileNav from '@/components/layout/MobileNav';
@@ -32,6 +34,10 @@ export default function Home() {
         return <CheckoutPage />;
       case 'checkout-success':
         return <OrderConfirmation />;
+      case 'wishlist':
+        return <WishlistPage />;
+      case 'account':
+        return <AccountPage />;
       default:
         return <HomePage />;
     }

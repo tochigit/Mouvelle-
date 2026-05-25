@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
 
     // Build order by
     let orderBy: Record<string, unknown> = { createdAt: 'desc' }
+    let isBestSelling = false
     switch (sort) {
       case 'price-asc':
         orderBy = { price: 'asc' }
@@ -60,11 +61,21 @@ export async function GET(request: NextRequest) {
       case 'featured':
         orderBy = [{ featured: 'desc' }, { createdAt: 'desc' }]
         break
+      case 'best-selling':
+        // Sort by review count (proxy for sales) — handled in-memory after fetch
+        isBestSelling = true
+        orderBy = { createdAt: 'desc' }
+        break
       case 'newest':
       default:
         orderBy = { createdAt: 'desc' }
         break
     }
+
+    // For best-selling, we need all matching products to sort in-memory,
+    // then apply offset/limit after sorting
+    const fetchLimit = isBestSelling ? undefined : limit
+    const fetchSkip = isBestSelling ? undefined : offset
 
     const [products, total] = await Promise.all([
       db.product.findMany({
@@ -75,14 +86,14 @@ export async function GET(request: NextRequest) {
           reviews: { select: { rating: true } },
         },
         orderBy,
-        take: limit,
-        skip: offset,
+        ...(fetchLimit !== undefined ? { take: fetchLimit } : {}),
+        ...(fetchSkip !== undefined ? { skip: fetchSkip } : {}),
       }),
       db.product.count({ where }),
     ])
 
     // Calculate average rating for each product
-    const productsWithRating = products.map((product) => {
+    let productsWithRating = products.map((product) => {
       const avgRating =
         product.reviews.length > 0
           ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
@@ -90,6 +101,17 @@ export async function GET(request: NextRequest) {
       const { reviews, ...rest } = product
       return { ...rest, avgRating: Math.round(avgRating * 10) / 10, reviewCount: reviews.length }
     })
+
+    // Sort by best-selling: primary = reviewCount desc, secondary = avgRating desc, tertiary = createdAt desc
+    if (isBestSelling) {
+      productsWithRating.sort((a, b) => {
+        if (b.reviewCount !== a.reviewCount) return b.reviewCount - a.reviewCount
+        if (b.avgRating !== a.avgRating) return b.avgRating - a.avgRating
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      })
+      // Apply offset/limit after in-memory sort
+      productsWithRating = productsWithRating.slice(offset, offset + limit)
+    }
 
     return NextResponse.json({
       products: productsWithRating,

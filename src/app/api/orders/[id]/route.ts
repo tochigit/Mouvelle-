@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
-// GET /api/orders/[id] — Get single order
+// GET /api/orders/[id] — Get single order by ID or orderNumber (ELR-XXXXX format)
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -9,8 +9,11 @@ export async function GET(
   try {
     const { id } = await params
 
+    // If the id looks like an order number (starts with ELR-), look up by orderNumber
+    const where = id.startsWith('ELR-') ? { orderNumber: id } : { id }
+
     const order = await db.order.findUnique({
-      where: { id },
+      where,
       include: {
         items: {
           include: {
