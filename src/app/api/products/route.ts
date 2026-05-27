@@ -22,31 +22,48 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const sort = searchParams.get('sort') || 'newest'
     const badge = searchParams.get('badge')
+    const inStock = searchParams.get('inStock')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    // Build where clause
-    const where: Record<string, unknown> = {}
+    // Build where clause using AND to combine multiple conditions
+    const andConditions: Record<string, unknown>[] = []
 
     if (category) {
-      where.category = category
+      andConditions.push({ category })
     }
 
     if (featured === 'true') {
-      where.featured = true
+      andConditions.push({ featured: true })
     }
 
     if (badge) {
-      where.badge = badge
+      andConditions.push({ badge })
+    }
+
+    // In-stock filter: show products that have stockQuantity > 0
+    // OR at least one variant with stockQuantity > 0
+    if (inStock === 'true') {
+      andConditions.push({
+        OR: [
+          { stockQuantity: { gt: 0 } },
+          { variants: { some: { stockQuantity: { gt: 0 } } } },
+        ],
+      })
     }
 
     if (search) {
-      where.OR = [
-        { title: { contains: search } },
-        { description: { contains: search } },
-        { tags: { contains: search } },
-      ]
+      andConditions.push({
+        OR: [
+          { title: { contains: search } },
+          { description: { contains: search } },
+          { tags: { contains: search } },
+        ],
+      })
     }
+
+    const where: Record<string, unknown> =
+      andConditions.length > 0 ? { AND: andConditions } : {}
 
     // Build order by
     let orderBy: Record<string, unknown> = { createdAt: 'desc' }

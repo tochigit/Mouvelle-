@@ -26,8 +26,10 @@ import {
   X,
   Loader2,
   AlertCircle,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import BackButton from '@/components/common/BackButton';
 
 interface OrderItemWithProduct {
   id: string;
@@ -68,6 +70,7 @@ const STATUS_STEPS = [
   { key: 'paid', label: 'Payment Confirmed', icon: CreditCard },
   { key: 'processing', label: 'Processing', icon: Package },
   { key: 'shipped', label: 'Shipped', icon: Truck },
+  { key: 'out_for_delivery', label: 'Out for Delivery', icon: Truck },
   { key: 'delivered', label: 'Delivered', icon: CheckCircle2 },
 ];
 
@@ -76,6 +79,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: str
   paid: { label: 'Paid', color: 'text-blue-600', bgColor: 'bg-blue-50 border-blue-200' },
   processing: { label: 'Processing', color: 'text-purple-600', bgColor: 'bg-purple-50 border-purple-200' },
   shipped: { label: 'Shipped', color: 'text-indigo-600', bgColor: 'bg-indigo-50 border-indigo-200' },
+  out_for_delivery: { label: 'Out for Delivery', color: 'text-orange-600', bgColor: 'bg-orange-50 border-orange-200' },
   delivered: { label: 'Delivered', color: 'text-green-600', bgColor: 'bg-green-50 border-green-200' },
   cancelled: { label: 'Cancelled', color: 'text-red-600', bgColor: 'bg-red-50 border-red-200' },
 };
@@ -123,7 +127,7 @@ function OrderTimeline({ status }: { status: string }) {
                 </div>
                 <span
                   className={`
-                    mt-2 text-[10px] sm:text-xs text-center leading-tight
+                    mt-2 text-[9px] sm:text-xs text-center leading-tight
                     ${isCompleted ? 'text-foreground font-medium' : 'text-muted-foreground'}
                   `}
                 >
@@ -315,7 +319,10 @@ export default function AccountPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [viewedOrder, setViewedOrder] = useState<OrderData | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [notFoundMessage, setNotFoundMessage] = useState('');
   const [recentOrders, setRecentOrders] = useState<OrderData[]>([]);
+  const [emailOrders, setEmailOrders] = useState<OrderData[]>([]);
+  const [isEmailSearch, setIsEmailSearch] = useState(false);
 
   // Auto-load last order if available
   useEffect(() => {
@@ -342,34 +349,63 @@ export default function AccountPage() {
     fetchLastOrder();
   }, [lastOrderId]);
 
+  // Detect if input is email or order number
+  const detectInputType = (value: string): 'order' | 'email' | 'unknown' => {
+    const trimmed = value.trim();
+    if (trimmed.toUpperCase().startsWith('ELR-')) return 'order';
+    if (trimmed.includes('@') && trimmed.includes('.')) return 'email';
+    return 'unknown';
+  };
+
   const handleSearch = async () => {
-    const query = searchInput.trim().toUpperCase();
+    const query = searchInput.trim();
     if (!query) {
-      toast.error('Please enter an order number');
+      toast.error('Please enter an order number or email address');
       return;
     }
 
     setIsLoading(true);
     setNotFound(false);
+    setNotFoundMessage('');
     setViewedOrder(null);
+    setEmailOrders([]);
+    setIsEmailSearch(false);
 
     try {
-      const res = await fetch(`/api/orders/${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/orders/lookup?q=${encodeURIComponent(query)}`);
       if (res.status === 404) {
+        const data = await res.json();
         setNotFound(true);
-        toast.error('Order not found');
+        setNotFoundMessage(data.error || 'Order not found');
+        toast.error(data.error || 'Order not found');
       } else if (!res.ok) {
         toast.error('Something went wrong. Please try again.');
       } else {
         const data = await res.json();
-        setViewedOrder(data.order);
-        // Add to recent orders if not already there
-        setRecentOrders((prev) => {
-          const exists = prev.some((o) => o.orderNumber === data.order.orderNumber);
-          if (exists) return prev;
-          return [data.order, ...prev].slice(0, 5);
-        });
-        toast.success('Order found!');
+        const orders: OrderData[] = data.orders;
+
+        if (orders.length === 1) {
+          // Single order — show details directly
+          setViewedOrder(orders[0]);
+          // Add to recent orders if not already there
+          setRecentOrders((prev) => {
+            const exists = prev.some((o) => o.orderNumber === orders[0].orderNumber);
+            if (exists) return prev;
+            return [orders[0], ...prev].slice(0, 5);
+          });
+          toast.success('Order found!');
+        } else if (orders.length > 1) {
+          // Multiple orders (email search) — show list
+          setIsEmailSearch(true);
+          setEmailOrders(orders);
+          // Add all to recent orders
+          setRecentOrders((prev) => {
+            const existing = new Set(prev.map((o) => o.orderNumber));
+            const newOrders = orders.filter((o) => !existing.has(o.orderNumber));
+            return [...newOrders, ...prev].slice(0, 10);
+          });
+          toast.success(`Found ${orders.length} order${orders.length !== 1 ? 's' : ''}`);
+        }
       }
     } catch {
       toast.error('Network error. Please check your connection.');
@@ -382,8 +418,12 @@ export default function AccountPage() {
     setViewedOrder(order);
     setSearchInput(order.orderNumber);
     setNotFound(false);
+    setEmailOrders([]);
+    setIsEmailSearch(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const inputType = detectInputType(searchInput);
 
   return (
     <div className="min-h-screen bg-background">
@@ -396,6 +436,11 @@ export default function AccountPage() {
           <ChevronRight className="h-3 w-3" />
           <span className="text-foreground">My Account</span>
         </nav>
+
+        {/* Back Button */}
+        <div className="mb-4">
+          <BackButton fallbackPage="home" label="Back to Home" />
+        </div>
 
         {/* Page Title */}
         <motion.div
@@ -422,25 +467,52 @@ export default function AccountPage() {
             </div>
             <div>
               <h2 className="font-serif text-xl sm:text-2xl font-bold">Track Your Order</h2>
-              <p className="text-sm text-muted-foreground">Enter your order number to check the status</p>
+              <p className="text-sm text-muted-foreground">Enter your order number or email address</p>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 mt-4">
             <div className="flex-1 relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {inputType === 'email' ? (
+                  <Mail className="h-4 w-4" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </div>
               <Input
                 value={searchInput}
                 onChange={(e) => {
-                  setSearchInput(e.target.value.toUpperCase());
+                  setSearchInput(e.target.value);
                   setNotFound(false);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSearch();
                 }}
-                placeholder="ELR-XXXXX"
-                className="h-12 text-base font-mono border-border bg-background pl-4 focus-visible:ring-[#D4AF37]"
+                placeholder="Enter order number or email"
+                className="h-12 text-base pl-10 border-border bg-background focus-visible:ring-[#D4AF37]"
                 disabled={isLoading}
               />
+              {searchInput.trim() && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Badge
+                    variant="secondary"
+                    className={`text-[10px] ${
+                      inputType === 'email'
+                        ? 'bg-blue-50 text-blue-600 border-blue-200'
+                        : inputType === 'order'
+                        ? 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/20'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {inputType === 'email'
+                      ? 'Email lookup'
+                      : inputType === 'order'
+                      ? 'Order #'
+                      : 'Order # or email'}
+                  </Badge>
+                </div>
+              )}
             </div>
             <Button
               onClick={handleSearch}
@@ -462,7 +534,7 @@ export default function AccountPage() {
           </div>
 
           <p className="text-xs text-muted-foreground mt-3">
-            Your order number can be found in your confirmation email or on the order confirmation page. Format: ELR-XXXXX
+            Search by order number (ELR-XXXXX) or the email address used when placing your order.
           </p>
         </motion.div>
 
@@ -476,6 +548,73 @@ export default function AccountPage() {
                 setSearchInput('');
               }}
             />
+          ) : isEmailSearch && emailOrders.length > 0 ? (
+            <motion.div
+              key="email-orders"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="font-serif text-xl sm:text-2xl font-bold">
+                  Your Orders ({emailOrders.length})
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setEmailOrders([]);
+                    setIsEmailSearch(false);
+                    setSearchInput('');
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Showing all orders for <span className="font-medium text-foreground">{searchInput}</span>
+              </p>
+              <div className="space-y-3">
+                {emailOrders.map((order) => {
+                  const statusConfig = STATUS_CONFIG[order.orderStatus] || STATUS_CONFIG.pending;
+                  return (
+                    <motion.div
+                      key={order.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-card border border-border rounded-lg p-4 sm:p-5 hover:border-[#D4AF37]/30 transition-colors cursor-pointer"
+                      onClick={() => handleViewOrder(order)}
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="h-12 w-12 rounded-full bg-[#D4AF37]/10 flex items-center justify-center shrink-0">
+                            <PackageCheck className="h-5 w-5 text-[#D4AF37]" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-mono font-bold text-[#D4AF37] text-sm">
+                              {order.orderNumber}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {formatDate(order.createdAt)} · {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <Badge className={`${statusConfig.bgColor} ${statusConfig.color} border text-xs hidden sm:inline-flex`}>
+                            {statusConfig.label}
+                          </Badge>
+                          <span className="font-semibold text-sm">{formatPrice(order.totalAmount)}</span>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
           ) : notFound ? (
             <motion.div
               key="not-found"
@@ -489,12 +628,13 @@ export default function AccountPage() {
               </div>
               <h3 className="font-serif text-2xl font-bold mb-2">Order Not Found</h3>
               <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                We couldn&apos;t find an order with that number. Please double-check your order number and try again.
+                {notFoundMessage || "We couldn't find an order matching your search. Please double-check and try again."}
               </p>
               <Button
                 variant="outline"
                 onClick={() => {
                   setNotFound(false);
+                  setNotFoundMessage('');
                   setSearchInput('');
                 }}
                 className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10"
@@ -566,7 +706,7 @@ export default function AccountPage() {
                   </div>
                   <h2 className="font-serif text-2xl mb-2">No Orders to Track</h2>
                   <p className="text-muted-foreground mb-6 max-w-md">
-                    You haven&apos;t placed any orders yet, or your order history isn&apos;t available. Enter your order number above to track a specific order.
+                    You haven&apos;t placed any orders yet, or your order history isn&apos;t available. Enter your order number or email above to track a specific order.
                   </p>
                   <Button
                     onClick={() => navigate('shop')}

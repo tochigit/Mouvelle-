@@ -84,6 +84,7 @@ export default function ShopPage() {
       if (debouncedSearch) params.set('search', debouncedSearch);
       if (sort) params.set('sort', sort);
       if (selectedCategories.length === 1) params.set('category', selectedCategories[0]);
+      if (inStockOnly) params.set('inStock', 'true');
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch');
@@ -104,9 +105,13 @@ export default function ShopPage() {
         filtered = filtered.filter((p: Product) => (p.discountPrice || p.price) <= Number(priceMax));
       }
 
-      // In-stock filter
+      // Client-side in-stock fallback for edge cases
+      // (API already filters, but this catches any products where variants have stock
+      // but the product-level stockQuantity is 0 that might slip through)
       if (inStockOnly) {
-        filtered = filtered.filter((p: Product) => p.stockQuantity > 0);
+        filtered = filtered.filter((p: Product) =>
+          p.stockQuantity > 0 || (p.variants && p.variants.some((v) => v.stockQuantity > 0))
+        );
       }
 
       setProducts(filtered);

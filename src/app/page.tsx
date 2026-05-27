@@ -11,11 +11,11 @@ import CheckoutPage from '@/components/checkout/CheckoutPage';
 import OrderConfirmation from '@/components/checkout/OrderConfirmation';
 import WishlistPage from '@/components/wishlist/WishlistPage';
 import AccountPage from '@/components/account/AccountPage';
+import CollectionsPage from '@/components/collections/CollectionsPage';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MobileNav from '@/components/layout/MobileNav';
 import WhatsAppButton from '@/components/layout/WhatsAppButton';
-import AnnouncementBar from '@/components/layout/AnnouncementBar';
 
 export default function Home() {
   const { currentPage } = useNavigationStore();
@@ -26,6 +26,8 @@ export default function Home() {
         return <HomePage />;
       case 'shop':
         return <ShopPage />;
+      case 'collections':
+        return <CollectionsPage />;
       case 'product':
         return <ProductDetailPage />;
       case 'cart':
@@ -45,7 +47,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <AnnouncementBar />
       <Header />
       <div className="flex-1 pb-16 md:pb-0">
         <AnimatePresence mode="wait">

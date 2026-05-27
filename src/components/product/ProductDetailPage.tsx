@@ -26,11 +26,12 @@ import {
   Minus,
   Plus,
   ZoomIn,
-  ArrowLeft,
+  ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ReviewFormDialog from '@/components/product/ReviewFormDialog';
 import SizeGuideDialog from '@/components/product/SizeGuideDialog';
+import BackButton from '@/components/common/BackButton';
 
 interface ProductWithDetails extends Product {
   avgRating: number;
@@ -81,13 +82,28 @@ export default function ProductDetailPage() {
         if (colors.length > 0) setSelectedColor(colors[0].variantValue);
         if (sizes.length > 0) setSelectedSize(sizes[0].variantValue);
 
-        // Fetch related products
-        const relatedRes = await fetch(`/api/products?category=${data.product.category}&limit=6`);
-        const related = await relatedRes.json();
-        if (!cancelled) {
-          setRelatedProducts(
-            (related.products as ProductWithDetails[]).filter((p) => p.id !== data.product.id)
-          );
+        // Fetch related products via dedicated endpoint
+        try {
+          const relatedRes = await fetch(`/api/products/related/${data.product.id}`)
+          if (relatedRes.ok) {
+            const related = await relatedRes.json()
+            if (!cancelled) {
+              setRelatedProducts(related.products as ProductWithDetails[])
+            }
+          }
+        } catch {
+          // Graceful fallback: fetch same-category products
+          try {
+            const fallbackRes = await fetch(`/api/products?category=${data.product.category}&limit=6`)
+            const fallback = await fallbackRes.json()
+            if (!cancelled) {
+              setRelatedProducts(
+                (fallback.products as ProductWithDetails[]).filter((p) => p.id !== data.product.id)
+              )
+            }
+          } catch {
+            // Silently ignore fallback failure
+          }
         }
       } catch {
         if (!cancelled) {
@@ -225,6 +241,11 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <div className="mb-4">
+          <BackButton fallbackPage="shop" label="Back to Shop" />
+        </div>
+
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
           <button onClick={() => navigate('home')} className="hover:text-[#D4AF37] transition-colors">
@@ -237,15 +258,6 @@ export default function ProductDetailPage() {
           <ChevronRight className="h-3 w-3" />
           <span className="text-foreground line-clamp-1">{product.title}</span>
         </nav>
-
-        {/* Back button on mobile */}
-        <button
-          onClick={() => navigate('shop')}
-          className="lg:hidden flex items-center gap-1 text-sm text-muted-foreground hover:text-[#D4AF37] mb-4 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Shop
-        </button>
 
         {/* Main Content - Two Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
@@ -712,7 +724,7 @@ export default function ProductDetailPage() {
                       className="border border-border rounded-lg p-4 sm:p-5"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-sm">{review.authorName}</span>
                           <div className="flex items-center">
                             {Array.from({ length: 5 }).map((_, i) => (
@@ -726,6 +738,12 @@ export default function ProductDetailPage() {
                               />
                             ))}
                           </div>
+                          {'verifiedPurchase' in review && review.verifiedPurchase && (
+                            <Badge className="bg-green-50 text-green-700 border-green-200 text-[10px] gap-1 px-1.5 py-0">
+                              <ShieldCheck className="h-3 w-3" />
+                              Verified Purchase
+                            </Badge>
+                          )}
                         </div>
                         <span className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</span>
                       </div>

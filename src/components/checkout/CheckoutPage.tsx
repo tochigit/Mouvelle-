@@ -31,9 +31,9 @@ import {
   MapPin,
   ChevronDown,
   ShoppingBag,
-  ArrowLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import BackButton from '@/components/common/BackButton';
 
 export default function CheckoutPage() {
   const { navigate } = useNavigationStore();
@@ -187,16 +187,13 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Back Button + Header */}
+        <div className="mb-4">
+          <BackButton fallbackPage="cart" label="Back to Cart" />
+        </div>
+
         <div className="flex items-center justify-between mb-6">
           <h1 className="font-serif text-2xl sm:text-3xl font-bold">Checkout</h1>
-          <button
-            onClick={() => navigate('cart')}
-            className="text-sm text-muted-foreground hover:text-[#D4AF37] flex items-center gap-1 transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Cart
-          </button>
         </div>
 
         {/* Step Indicator */}

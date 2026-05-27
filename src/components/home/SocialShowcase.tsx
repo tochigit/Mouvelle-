@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Instagram, Heart } from 'lucide-react';
+import { toast } from 'sonner';
 
 const socialPosts = [
   {
@@ -79,6 +80,7 @@ export function SocialShowcase() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ scale: 1.03 }}
               className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer"
+              onClick={() => toast('Social media coming soon!', { description: 'Our Instagram page will be launching soon. Stay tuned!' })}
             >
               {/* Gradient background as placeholder image */}
               <div
@@ -122,15 +124,13 @@ export function SocialShowcase() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="text-center mt-8 md:mt-10"
         >
-          <a
-            href="https://instagram.com/elara.ng"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => toast('Social media coming soon!', { description: 'Our Instagram page will be launching soon. Stay tuned!' })}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#D4AF37]/40 text-[#D4AF37] text-sm font-medium hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] transition-all duration-300"
           >
             <Instagram className="size-4" />
             Follow Us
-          </a>
+          </button>
         </motion.div>
       </div>
     </section>

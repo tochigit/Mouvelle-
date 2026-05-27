@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingBag, Minus, Plus, X, ArrowRight, Shield, RefreshCw, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import BackButton from '@/components/common/BackButton';
 
 export default function CartPage() {
   const { navigate } = useNavigationStore();
@@ -33,6 +34,11 @@ export default function CartPage() {
           <ChevronRight className="h-3 w-3" />
           <span className="text-foreground">Shopping Cart</span>
         </nav>
+
+        {/* Back Button */}
+        <div className="mb-4">
+          <BackButton fallbackPage="shop" label="Back to Shop" />
+        </div>
 
         {/* Page Title */}
         <motion.h1
@@ -245,7 +251,7 @@ export default function CartPage() {
                     <Button
                       variant="outline"
                       className="h-9 border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 shrink-0"
-                      onClick={() => toast.info('Promo codes coming soon!')}
+                      onClick={() => toast.info('Promo codes coming soon!', { description: 'We\'re working on bringing you exciting promo codes and discounts. Stay tuned for future updates!' })}
                     >
                       Apply
                     </Button>

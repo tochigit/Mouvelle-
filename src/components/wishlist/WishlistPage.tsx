@@ -20,6 +20,7 @@ import {
   ShoppingBagIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import BackButton from '@/components/common/BackButton';
 
 export default function WishlistPage() {
   const { navigate } = useNavigationStore();
@@ -108,6 +109,11 @@ export default function WishlistPage() {
     return (
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* Back Button */}
+          <div className="mb-4">
+            <BackButton fallbackPage="shop" label="Back to Shop" />
+          </div>
+
           {/* Breadcrumb */}
           <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
             <button onClick={() => navigate('home')} className="hover:text-[#D4AF37] transition-colors">
@@ -145,6 +151,11 @@ export default function WishlistPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <div className="mb-4">
+          <BackButton fallbackPage="shop" label="Back to Shop" />
+        </div>
+
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
           <button onClick={() => navigate('home')} className="hover:text-[#D4AF37] transition-colors">

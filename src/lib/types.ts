@@ -1,8 +1,8 @@
-export type PageView = 'home' | 'shop' | 'product' | 'cart' | 'checkout' | 'checkout-success' | 'account' | 'wishlist';
+export type PageView = 'home' | 'shop' | 'collections' | 'product' | 'cart' | 'checkout' | 'checkout-success' | 'account' | 'wishlist';
 
 export type Category = 'Perfumes' | 'Sunglasses' | 'Jewelry' | 'Fashion Accessories';
 
-export type OrderStatus = 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'paid' | 'processing' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled';
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
 
@@ -25,6 +25,7 @@ export interface Review {
   authorName: string;
   rating: number;
   comment: string;
+  verifiedPurchase: boolean;
   createdAt: string;
 }
 

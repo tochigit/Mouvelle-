@@ -399,3 +399,443 @@ Stage Summary:
 - Slug conflict resolved - single `[id]` route handles both ID and orderNumber lookups
 - Dev server compiles cleanly with no errors
 - All API endpoints functional
+
+---
+Task ID: 3
+Agent: Live Search Overlay Implementer
+Task: Upgrade Search to Live Dynamic Search with Animated Overlay
+
+Work Log:
+- Read worklog.md to understand project history and previous work
+- Read current `src/components/layout/Header.tsx` — search was a simple Dialog with text input that redirects to shop on submit
+- Read `src/stores/navigation.ts` — has searchQuery and setSearchQuery already
+- Read `src/app/api/products/route.ts` — existing `/api/products?search=` endpoint supports partial matching on title, description, tags; limit param supported
+- Read `src/lib/types.ts` and `src/lib/format.ts` — Product type, formatPriceWithDiscount utility
+- Read `src/components/common/ProductCard.tsx` — style reference (gold accents, unoptimized Image, product display patterns)
+
+- Created `src/components/layout/SearchOverlay.tsx` — new full-screen animated search overlay:
+  - **Animated overlay**: Dark semi-transparent backdrop (bg-black/60) with blur, slides down from top via framer-motion
+  - **Search container**: Centered, max-w-2xl, rounded-2xl with shadow-2xl
+  - **Large search input**: h-14/h-16, gold (#D4AF37) search icon, clear button, Esc keyboard hint
+  - **Live search with debounce**: 300ms debounce, triggers API fetch when 2+ characters typed
+  - **Results display**: Scrollable list (max-h-[60vh]/[50vh]) showing product thumbnail, title, price (with discount), category badge, arrow icon
+  - **Loading state**: Loader2 spinner with "Searching..." text
+  - **No results state**: PackageOpen icon, "No products found" message, "Browse Shop" button
+  - **Initial state**: Popular searches (Perfume, Sunglasses, Gold Necklace, Silk Scarf, Leather Bag) as pill buttons + Browse Categories list
+  - **View all results button**: Navigates to shop with search query pre-filled via navigation store
+  - **Keyboard navigation**: ArrowUp/ArrowDown to navigate results, Enter to select, Escape to close, Cmd/Ctrl+K to toggle
+  - **Mouse interaction**: Hover highlights result row, selected index tracks both keyboard and mouse
+  - **Click on result**: Navigates to product page and closes overlay
+  - **Accessibility**: role="dialog", aria-modal="true", aria-label, aria-label on input, proper keyboard support
+  - **Mobile support**: Full screen on mobile, touch-friendly 44px min-height on all interactive items, responsive padding/spacing
+  - **Animations**: framer-motion AnimatePresence for overlay enter/exit, spring animation for container slide-down, staggered result items, smooth transitions
+  - **Gold theme**: #D4AF37 accent on search icon, prices, category badges, selected states, hover effects
+
+- Updated `src/components/layout/Header.tsx`:
+  - Replaced Dialog-based search with new SearchOverlay component
+  - Removed unused imports: Dialog/DialogContent/DialogHeader/DialogTitle/DialogDescription, Input, useRef
+  - Removed unused state: searchInput, searchInputRef
+  - Removed unused handlers: handleSearchSubmit, auto-focus useEffect
+  - Removed unused store import: setSearchQuery from navigation store
+  - Cleaned up extra blank lines
+  - Kept mobile menu search button → opens new SearchOverlay
+  - Kept Cmd/Ctrl+K keyboard shortcut (also handled inside SearchOverlay for toggle)
+  - All lint checks pass cleanly
+
+Files Created:
+- `src/components/layout/SearchOverlay.tsx` — New file, full-screen animated live search overlay
+
+Files Modified:
+- `src/components/layout/Header.tsx` — Replaced Dialog with SearchOverlay, removed unused imports/state/handlers
+
+Stage Summary:
+- Search upgraded from simple Dialog redirect to premium live search overlay with real-time results
+- Live search fetches from existing /api/products endpoint with 300ms debounce
+- Full keyboard navigation (Arrow keys, Enter, Escape, Cmd/Ctrl+K)
+- Animated enter/exit with framer-motion (spring slide-down, staggered results)
+- Mobile-friendly with full-screen layout and 44px touch targets
+- Initial state shows popular searches and category browsing
+- Loading, empty, and results states all implemented
+- Gold (#D4AF37) accent theme consistent with rest of site
+- All lint checks pass cleanly
+
+---
+Task ID: 5+10
+Agent: Feature Implementation Agent
+Task: Make "In Stock Only" Filter Functional at API Level + Make "You May Also Like" Section Dynamic and Database-Driven
+
+Work Log:
+
+Part 1: In Stock Only Filter at API Level
+- Read `src/app/api/products/route.ts` — identified that inStock filter was only done client-side in ShopPage
+- Read `src/components/shop/ShopPage.tsx` — confirmed client-side only filtering with `p.stockQuantity > 0`
+- Updated `src/app/api/products/route.ts`:
+  - Added `inStock` query parameter parsing from searchParams
+  - Restructured where clause building to use `AND` array pattern instead of direct property assignment
+  - This prevents conflicts when both `inStock` and `search` are active (both previously set `where.OR`, causing one to overwrite the other)
+  - When `inStock=true`, adds an OR condition: `{ stockQuantity: { gt: 0 } }` OR `{ variants: { some: { stockQuantity: { gt: 0 } } } }`
+  - This correctly filters out products where ALL variants have 0 stock AND the product itself has 0 stock
+  - All conditions (category, featured, badge, inStock, search) are now combined via AND array
+- Updated `src/components/shop/ShopPage.tsx`:
+  - Added `params.set('inStock', 'true')` when `inStockOnly` is active, sending the filter to the API
+  - Changed client-side fallback filter to also check variants: `p.stockQuantity > 0 || (p.variants && p.variants.some((v) => v.stockQuantity > 0))`
+  - This catches edge cases where API filtering might miss variant-only stock situations
+  - Kept client-side filter as fallback per requirements
+
+Part 2: Dynamic "You May Also Like" Section
+- Read `src/components/product/ProductDetailPage.tsx` — related products were fetched via simple category query: `/api/products?category=${category}&limit=6`
+- Created `src/app/api/products/related/[id]/route.ts`:
+  - GET endpoint taking product ID as URL parameter
+  - Fetches current product to get its category, tags, and price
+  - Fetches all other products with images, variants, and reviews
+  - Implements weighted scoring algorithm:
+    - Same category: +3 (primary signal)
+    - Matching tags: +2 per matching tag (secondary signal)
+    - Similar price range (±30% of current product price): +1 (tertiary signal)
+  - Sorts by score descending, then by reviewCount as tiebreaker
+  - Filters out zero-score products, returns top 6
+  - Graceful fallback: if no scored products found, returns same-category products
+  - Returns products with images, avgRating, reviewCount (reviews stripped from response)
+- Updated `src/components/product/ProductDetailPage.tsx`:
+  - Replaced simple category fetch with call to new `/api/products/related/${id}` endpoint
+  - Added try/catch with graceful fallback: if the related endpoint fails, falls back to original category-based query
+  - Nested try/catch ensures even the fallback failure is handled silently
+
+Files Created:
+- `src/app/api/products/related/[id]/route.ts` — New file, related products API with weighted scoring
+
+Files Modified:
+- `src/app/api/products/route.ts` — Added inStock query param, restructured where clause with AND array
+- `src/components/shop/ShopPage.tsx` — Send inStock param to API, enhanced client-side fallback
+- `src/components/product/ProductDetailPage.tsx` — Use new related products endpoint with fallback
+
+Stage Summary:
+- "In Stock Only" filter now works at the API level, filtering products with stockQuantity > 0 OR at least one in-stock variant
+- Where clause building refactored to use AND array, fixing potential conflicts between search and inStock filters
+- "You May Also Like" section now uses a weighted scoring system: same category (weight 3), same tags (weight 2), similar price ±30% (weight 1)
+- Related products endpoint has graceful fallback to same-category products when no scored matches exist
+- ProductDetailPage falls back to category query if the related endpoint fails
+- All lint checks pass cleanly
+- API endpoints verified working: /api/products?inStock=true returns 16 in-stock products, /api/products/related/[id] returns scored related products
+
+---
+Task ID: 2
+Agent: Collections Page Implementer
+Task: Create a Premium Collections Page
+
+Work Log:
+- Read worklog.md to understand project history and previous work
+- Read `src/app/page.tsx` — confirmed CollectionsPage is already imported and routed for `case 'collections'`
+- Read `src/stores/navigation.ts` — has navigate, goBack, setCategory, searchQuery, setSearchQuery
+- Read `src/lib/types.ts` — Product, ProductImage types for API response handling
+- Read `src/lib/format.ts` — formatPriceWithDiscount utility
+- Read `src/app/api/products/route.ts` — confirmed support for category, badge, sort=best-selling, limit params
+- Read `src/components/shop/ShopPage.tsx` for style reference (breadcrumb, font-serif headings, gold accent)
+- Read `src/components/cart/CartPage.tsx` for breadcrumb and layout patterns
+- Read `src/components/common/ProductCard.tsx` for product display conventions
+- Read `src/components/home/FeaturedCollections.tsx` for existing collection UI patterns
+
+- Created `src/components/collections/CollectionsPage.tsx` with:
+  - **5 Curated Collections**:
+    1. "Luxury Fragrance Collection" — Perfumes category, amber/moody aesthetic, Droplets icon
+    2. "Minimal Gold Accessories" — Jewelry category, warm gold aesthetic, Gem icon
+    3. "Dark Essentials" — Sunglasses + Fashion Accessories (dual API fetch merged), slate/moody aesthetic, Moon icon
+    4. "Summer Drop" — NEW ARRIVAL badge filter, warm orange aesthetic, Sun icon
+    5. "Best Sellers" — sort=best-selling, emerald aesthetic, TrendingUp icon
+
+  - **Hero Section**: Full-width cinematic banner with dark gradient background, gold accent line at top, radial glow effect, "Curated Collections" title in font-serif with gold accent, editorial subtitle, scroll hint
+
+  - **Each Collection Section**: Full-width rounded-2xl card with:
+    - Unique subtle background mood (bgMood) and border accent per collection
+    - Editorial header with icon + overline subtitle, large font-serif title, descriptive text
+    - "View Collection" button (navigates to shop with category filter via setCategory)
+    - Horizontal scrollable product row (ScrollArea + ScrollBar) showing 4-5 products
+    - Editorial product cards: image only (3:4 aspect ratio) + name + price (simpler than shop cards)
+    - Product count footer
+    - Gold accent line at bottom
+
+  - **Dual-category fetch**: Dark Essentials fetches both Sunglasses and Fashion Accessories via Promise.all, merges and deduplicates products
+
+  - **Animations**: framer-motion whileInView for collection sections, staggered product card reveals, hero section entrance animations, hover effects on product cards
+
+  - **Breadcrumb**: Home → Collections with Back button using goBack() from navigation store
+
+  - **Bottom CTA**: "Can't Decide?" section with "Shop All" button
+
+  - **Loading skeletons**: CollectionSkeleton component with 5 placeholder cards per collection
+
+  - **Responsive**: Single column mobile, wider cards on larger screens, responsive padding and typography
+
+  - **Gold (#D4AF37) theme**: Consistent with rest of site — accents, buttons, prices, overlines
+
+- Lint passes with no errors
+- Dev server compiles successfully
+
+Files Created:
+- `src/components/collections/CollectionsPage.tsx` — New file, premium editorial collections page
+
+Stage Summary:
+- Premium Collections page fully implemented with editorial/cinematic design
+- 5 themed collections with unique moods, horizontal scrollable product rows, and scroll-reveal animations
+- Dual-category support for "Dark Essentials" (Sunglasses + Fashion Accessories)
+- Breadcrumb navigation and Back button functional
+- "View Collection" navigates to shop with appropriate category filter
+- Consistent visual style (gold accents, font-serif headings, framer-motion animations)
+- All lint checks pass cleanly
+
+---
+Task ID: 7+9
+Agent: Feature Implementation Agent
+Task: Improve Order Tracking System + Improve Reviews System (Only After Purchase)
+
+Work Log:
+
+Part 1: Improve Order Tracking System
+
+1. Updated `src/lib/types.ts`:
+   - Added `out_for_delivery` to `OrderStatus` type: 'pending' | 'paid' | 'processing' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled'
+
+2. Created `src/app/api/orders/lookup/route.ts` — new email-based order lookup API:
+   - GET endpoint with `q` query parameter
+   - Auto-detects input type: if starts with "ELR-", looks up by orderNumber; if contains "@", looks up by guestEmail
+   - For orderNumber: uses `findUnique` with `where: { orderNumber }`, returns single order in array
+   - For email: uses `findMany` with `where: { guestEmail }`, returns all matching orders sorted by createdAt desc
+   - Includes order items with product details (id, title, slug, price, discountPrice, images)
+   - Returns 404 with descriptive error message when no orders found
+   - Consistent `orders` array response format for both lookup types
+
+3. Updated `src/components/account/AccountPage.tsx`:
+   - Replaced order-number-only search with dual lookup (order number OR email)
+   - Changed placeholder from "ELR-XXXXX" to "Enter order number or email"
+   - Added `detectInputType()` function to auto-detect whether input is an order number, email, or unknown
+   - Added visual indicator (Badge) next to input showing detected type: "Order #", "Email lookup", or "Order # or email"
+   - Added Mail icon for email-type inputs vs Search icon for order numbers
+   - Updated search handler to use `/api/orders/lookup?q=` endpoint
+   - Added email search results view: when multiple orders found via email, shows them as a clickable list with order number, date, item count, status badge, and total amount
+   - Added "Clear" button to dismiss email search results
+   - Added `out_for_delivery` status to STATUS_STEPS timeline: Pending → Paid → Processing → Shipped → Out for Delivery → Delivered (6 steps)
+   - Added `out_for_delivery` to STATUS_CONFIG with orange color scheme (text-orange-600, bg-orange-50)
+   - Adjusted timeline step text size from text-[10px] to text-[9px] for the 6-step layout
+   - Updated helper text: "Search by order number (ELR-XXXXX) or the email address used when placing your order"
+   - Improved not-found messaging with dynamic error messages from API
+
+Part 2: Improve Reviews System — Purchase Verification
+
+1. Updated `prisma/schema.prisma`:
+   - Added `verifiedPurchase Boolean @default(false)` field to Review model
+   - Added `@@unique([authorName, productId])` composite unique constraint for rate limiting (one review per author per product)
+   - Ran `bun run db:push` to sync schema changes
+
+2. Updated `src/lib/types.ts`:
+   - Added `verifiedPurchase: boolean` field to Review interface
+
+3. Created `src/app/api/reviews/verify/route.ts` — purchase verification endpoint:
+   - POST endpoint taking `email` and `productId`
+   - Checks if there's an Order with `guestEmail = email` that has an OrderItem with `productId`
+   - Returns `{ verified: boolean, orderId?: string }`
+   - Uses `findFirst` with nested `items: { some: { productId } }` filter
+
+4. Updated `src/app/api/reviews/route.ts`:
+   - POST handler now accepts optional `email` and `verifiedPurchase` fields
+   - Rate limiting: checks if `authorName` already has a review for this `productId` using the unique constraint (`findUnique` on `authorName_productId`)
+   - Returns 409 "You have already reviewed this product" if duplicate detected
+   - Purchase verification: if email is provided, server-side check against orders
+   - If `verifiedPurchase` is explicitly passed from client (after client-side verification), uses that value
+   - Otherwise uses server-side verification result
+   - Creates review with `verifiedPurchase` field set appropriately
+
+5. Updated `src/components/product/ReviewFormDialog.tsx`:
+   - Added email input field with label "Email (for purchase verification)" and Mail icon
+   - Added "Verify" button next to email field for manual verification trigger
+   - Auto-verifies on blur when email contains "@"
+   - Shows green "Purchase verified" indicator with ShieldCheck icon when verification succeeds
+   - Shows subtle message when no matching order found ("Your review will still be published as a guest review")
+   - Shows helper text explaining the optional email field
+   - Passes `email` and `verifiedPurchase` in the review submission payload
+   - Reviews without email/verification are still allowed (guest reviews)
+
+6. Updated `src/components/product/ProductDetailPage.tsx`:
+   - Added ShieldCheck icon import
+   - Added green "Verified Purchase" badge next to verified reviews (with ShieldCheck icon)
+   - Badge styling: `bg-green-50 text-green-700 border-green-200` with compact padding
+   - Uses `'verifiedPurchase' in review && review.verifiedPurchase` check for backward compatibility with reviews that don't have the field
+
+Files Created:
+- `src/app/api/orders/lookup/route.ts` — New file, email-based order lookup API
+- `src/app/api/reviews/verify/route.ts` — New file, purchase verification API
+
+Files Modified:
+- `src/lib/types.ts` — Added out_for_delivery to OrderStatus, added verifiedPurchase to Review
+- `prisma/schema.prisma` — Added verifiedPurchase field and @@unique constraint to Review
+- `src/components/account/AccountPage.tsx` — Dual lookup, email search results, out_for_delivery status
+- `src/app/api/reviews/route.ts` — Purchase verification and rate limiting
+- `src/components/product/ReviewFormDialog.tsx` — Email field with purchase verification
+- `src/components/product/ProductDetailPage.tsx` — Verified Purchase badge on reviews
+
+Stage Summary:
+- Order tracking now supports both order number and email-based lookup
+- Auto-detection of input type with visual indicator
+- Email lookup returns multiple orders as a clickable list
+- "Out for Delivery" status added to order timeline (6-step: Pending → Paid → Processing → Shipped → Out for Delivery → Delivered)
+- Reviews now support purchase verification: email field in review form triggers verification against orders
+- "Verified Purchase" green badge displayed on verified reviews
+- Rate limiting prevents duplicate reviews (one per author per product)
+- All reviews are still allowed without verification (guest reviews)
+- Prisma schema updated with verifiedPurchase field and unique constraint
+- All lint checks pass cleanly
+
+---
+Task ID: 6+11
+Agent: Feature Implementation Agent
+Task: Add Back Button Navigation with History Logic + Audit All Clickable Elements
+
+Work Log:
+
+Part 1: Back Button Navigation with History Logic
+
+1. Created `src/components/common/BackButton.tsx` — Reusable back button component:
+   - Uses `useNavigationStore` to access `canGoBack()` and `goBack()`
+   - If `canGoBack()` is true, calls `goBack()` to navigate to previous page in history
+   - If `canGoBack()` is false, falls back to a specified `fallbackPage` (and optional `fallbackProductId`)
+   - Styled with ArrowLeft icon, "Back" text, gold hover color, subtle arrow animation on hover
+   - Accepts `fallbackPage`, `fallbackProductId`, and `label` props
+
+2. Updated `src/components/product/ProductDetailPage.tsx`:
+   - Added BackButton with `fallbackPage="shop"` and `label="Back to Shop"`
+   - Placed before the breadcrumb at top of page
+   - Removed old mobile-only back button (which just navigated to 'shop' without history)
+   - Removed unused ArrowLeft import
+
+3. Updated `src/components/cart/CartPage.tsx`:
+   - Added BackButton with `fallbackPage="shop"` and `label="Back to Shop"`
+   - Placed after breadcrumb at top of page
+
+4. Updated `src/components/checkout/CheckoutPage.tsx`:
+   - Added BackButton with `fallbackPage="cart"` and `label="Back to Cart"`
+   - Replaced the old "Back to Cart" button that only navigated to cart without history
+   - Removed unused ArrowLeft import
+
+5. Updated `src/components/account/AccountPage.tsx`:
+   - Added BackButton with `fallbackPage="home"` and `label="Back to Home"`
+   - Placed after breadcrumb at top of page
+
+6. Updated `src/components/wishlist/WishlistPage.tsx`:
+   - Added BackButton with `fallbackPage="shop"` and `label="Back to Shop"`
+   - Added to both the empty state view and the main wishlist view
+
+7. Verified `src/components/collections/CollectionsPage.tsx` — Already has a Back button using `goBack()` from navigation store (confirmed from previous implementation)
+
+Part 2: Audit All Clickable Elements
+
+1. **Footer social links** (Instagram, Twitter, Facebook) — FIXED:
+   - Were linking to generic URLs (instagram.com, twitter.com, facebook.com) that don't belong to the brand
+   - Changed from `<a>` tags to `<button>` elements that show an informative toast: "Social media coming soon!" with description about upcoming social media pages
+   - Added `toast` import from sonner
+
+2. **SocialShowcase "Follow Us" and social post cards** — FIXED:
+   - "Follow Us" button was linking to `https://instagram.com/elara.ng` (non-existent page)
+   - Changed from `<a>` to `<button>` that shows "Social media coming soon!" toast
+   - Social post grid cards (gradient placeholders) had `cursor-pointer` but did nothing on click
+   - Added `onClick` handler to show "Social media coming soon!" toast
+   - Added `toast` import from sonner
+
+3. **Header "About" and "Contact" links** — FIXED:
+   - "About" already navigated to 'home' which has content sections that serve as about (correct behavior)
+   - "Contact" was navigating to 'home' instead of providing a contact action
+   - Changed "Contact" page value to 'contact' and added special handling in `handleNavClick`
+   - When 'contact' is clicked, opens WhatsApp with pre-filled message via `wa.me` link
+   - Added `MessageCircle` and `WHATSAPP_NUMBER`/`WHATSAPP_MESSAGE` imports
+   - Updated NAV_LINKS type to `string` to accommodate the 'contact' special case
+
+4. **Product detail tabs (Details/Materials/Shipping/Care)** — VERIFIED: Already have meaningful content
+   - Details: Product description + tags
+   - Materials: Premium materials description
+   - Shipping: Delivery timelines by Nigerian state + free delivery threshold + returns policy
+   - Care: Care instructions list
+
+5. **"Promo Code" input on Cart page** — FIXED:
+   - Was showing generic "Promo codes coming soon!" toast
+   - Updated to more informative toast with title and description: "Promo codes coming soon!" + "We're working on bringing you exciting promo codes and discounts. Stay tuned for future updates!"
+
+6. **Quick View "Add to Cart" button** — VERIFIED: Works correctly (calls `addItem` with proper params, shows success toast)
+
+7. **WhatsApp floating button** — VERIFIED: Works correctly (links to `wa.me/${WHATSAPP_NUMBER}` with pre-filled message)
+
+8. **Mobile bottom nav** — VERIFIED: All tabs work correctly (Home, Shop, Cart, Wishlist, Account)
+
+9. **"Shop Now" / "Browse Collection" buttons on homepage** — VERIFIED: All work
+   - HeroSection: "Shop Collection" and "Explore New Arrivals" → navigate to shop
+   - FeaturedCollections: Category cards → setCategory and navigate to shop
+   - PromoBanner: "Explore Collection" → setCategory('Perfumes')
+   - TrendingProducts: "View All" → navigate to shop
+   - NewArrivals: "View All" → navigate to shop
+
+10. **Newsletter form** — VERIFIED: Submits to real `/api/newsletter` API endpoint
+
+11. **Theme toggle** — VERIFIED: Works correctly (uses next-themes `setTheme`)
+
+12. **CartSidebar** — VERIFIED: All buttons functional (Checkout, View Cart, Continue Shopping, Remove, Quantity +/-)
+
+13. **OrderConfirmation** — VERIFIED: All buttons functional (Continue Shopping → shop, Track Your Order → account)
+
+Files Created:
+- `src/components/common/BackButton.tsx` — New file, reusable back button with history logic
+
+Files Modified:
+- `src/components/product/ProductDetailPage.tsx` — Added BackButton, removed old mobile back button and ArrowLeft import
+- `src/components/cart/CartPage.tsx` — Added BackButton, improved promo code toast
+- `src/components/checkout/CheckoutPage.tsx` — Added BackButton, removed old back link and ArrowLeft import
+- `src/components/account/AccountPage.tsx` — Added BackButton
+- `src/components/wishlist/WishlistPage.tsx` — Added BackButton (both empty and main views)
+- `src/components/layout/Footer.tsx` — Changed social links from <a> to <button> with "coming soon" toast
+- `src/components/home/SocialShowcase.tsx` — Changed "Follow Us" and post cards to show "coming soon" toast
+- `src/components/layout/Header.tsx` — Contact link now opens WhatsApp; added MessageCircle and WhatsApp imports
+
+Stage Summary:
+- Reusable BackButton component created and added to ProductDetailPage, CartPage, CheckoutPage, AccountPage, WishlistPage
+- BackButton uses navigation history (goBack/canGoBack) with fallback to parent page when no history exists
+- CollectionsPage already had goBack() back button (confirmed)
+- All dead/non-functional clickable elements audited and fixed:
+  - Footer social links → "Coming soon" toast
+  - SocialShowcase links → "Coming soon" toast
+  - Header Contact → Opens WhatsApp
+  - Promo code toast → More informative message
+- All functional elements verified working (QuickView Add to Cart, WhatsApp button, Mobile nav, Homepage buttons, Newsletter, Theme toggle)
+- Zero dead buttons or non-functional interactive elements remain
+- All lint checks pass cleanly
+
+---
+Task ID: 16
+Agent: Main Orchestrator
+Task: Comprehensive UX and functionality improvements per user requirements
+
+Work Log:
+- Removed AnnouncementBar component from page.tsx
+- Updated .env with proper structure: DATABASE_URL, Supabase placeholders, Paystack placeholders
+- Updated PageView type to include 'collections'
+- Updated Header NAV_LINKS: Collections now navigates to 'collections' instead of 'shop'
+- Updated navigation store with history tracking: history[], canGoBack(), goBack()
+- Added CollectionsPage import and route in page.tsx
+- Delegated 4 parallel subagent tasks:
+  1. Collections Page (Task 2) - Created premium editorial collections page
+  2. Search Overlay (Task 3) - Created live search with animated overlay
+  3. In-Stock Filter + You May Also Like (Task 5+10) - API-level stock filtering + weighted related products
+  4. Order Tracking + Reviews (Task 7+9) - Email-based order lookup + purchase-verified reviews
+- Delegated 1 more subagent task:
+  5. Back Buttons + Dead Button Audit (Task 6+11) - BackButton component + all clickable elements audited
+- All lint checks pass cleanly
+- Dev server compiles without errors
+
+Stage Summary:
+- AnnouncementBar removed for cleaner premium look
+- Collections page: 5 curated editorial collections with cinematic design
+- Search: Full-screen animated overlay with live results, debounce, keyboard navigation
+- Wishlist: Already working with localStorage persistence (verified)
+- In Stock Only: Now filters at API level with variant stock support
+- Back navigation: History tracking + BackButton component on all pages
+- Order tracking: Email-based lookup + 6-step timeline (including Out for Delivery)
+- .env: Proper structure with Supabase and Paystack placeholders
+- Reviews: Purchase verification, rate limiting, Verified Purchase badge
+- You May Also Like: Weighted scoring (category 3x, tags 2x, price 1x)
+- All clickable elements audited - no dead buttons, social links show "coming soon" toast
+- Header Contact now opens WhatsApp instead of navigating to home

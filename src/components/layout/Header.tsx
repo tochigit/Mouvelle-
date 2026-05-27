@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Search, Heart, ShoppingBag, Menu, Sun, Moon, User, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Heart, ShoppingBag, Menu, Sun, Moon, User, ChevronRight, MessageCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
 import { useNavigationStore } from '@/stores/navigation';
 import { useCartStore } from '@/stores/cart';
 import { useWishlistStore } from '@/stores/wishlist';
-import { BRAND_NAME, CATEGORIES } from '@/lib/constants';
+import { BRAND_NAME, CATEGORIES, WHATSAPP_NUMBER, WHATSAPP_MESSAGE } from '@/lib/constants';
 import { useHydrated } from '@/hooks/useHydrated';
 import {
   Sheet,
@@ -16,35 +16,25 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import SearchOverlay from './SearchOverlay';
 
-const NAV_LINKS = [
-  { label: 'Shop', page: 'shop' as const },
-  { label: 'Collections', page: 'shop' as const },
-  { label: 'About', page: 'home' as const },
-  { label: 'Contact', page: 'home' as const },
+const NAV_LINKS: { label: string; page: string }[] = [
+  { label: 'Shop', page: 'shop' },
+  { label: 'Collections', page: 'collections' },
+  { label: 'About', page: 'home' },
+  { label: 'Contact', page: 'contact' },
 ];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState('');
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const hydrated = useHydrated();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigationStore((s) => s.navigate);
-  const setSearchQuery = useNavigationStore((s) => s.setSearchQuery);
   const itemCount = useCartStore((s) => s.getItemCount());
   const wishlistItems = useWishlistStore((s) => s.items);
 
@@ -68,37 +58,18 @@ export default function Header() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Auto-focus search input when dialog opens
-  useEffect(() => {
-    if (isSearchOpen) {
-      // Small delay to let the dialog animation complete
-      const timer = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
+  const handleNavClick = (page: string) => {
+    if (page === 'contact') {
+      // Contact opens WhatsApp instead of navigating to a page
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`, '_blank');
+    } else {
+      navigate(page as Parameters<typeof navigate>[0]);
     }
-  }, [isSearchOpen]);
-
-  const handleNavClick = (page: Parameters<typeof navigate>[0]) => {
-    navigate(page);
     setIsMobileMenuOpen(false);
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      setSearchQuery(searchInput.trim());
-      navigate('shop');
-      setIsSearchOpen(false);
-      setSearchInput('');
-    }
   };
 
   const handleSearchOpenChange = (open: boolean) => {
     setIsSearchOpen(open);
-    if (!open) {
-      setSearchInput('');
-    }
   };
 
   return (
@@ -192,40 +163,8 @@ export default function Header() {
         </div>
       </motion.header>
 
-      {/* Search Dialog */}
-      <Dialog open={isSearchOpen} onOpenChange={handleSearchOpenChange}>
-        <DialogContent className="sm:max-w-lg top-[20%] translate-y-0" showCloseButton={false}>
-          <DialogHeader className="sr-only">
-            <DialogTitle>Search Products</DialogTitle>
-            <DialogDescription>Search for products across our store</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSearchSubmit} className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
-              <Input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search for products..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="pl-11 h-12 text-base border-[#D4AF37]/30 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20"
-                autoFocus
-              />
-            </div>
-            <Button
-              type="submit"
-              size="default"
-              className="h-12 px-6 bg-[#D4AF37] text-[#1A1A1A] hover:bg-[#C0A030] shrink-0"
-            >
-              Search
-            </Button>
-          </form>
-          <p className="text-xs text-muted-foreground text-center">
-            Press <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px] font-mono">Enter</kbd> to search or{' '}
-            <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px] font-mono">Esc</kbd> to close
-          </p>
-        </DialogContent>
-      </Dialog>
+      {/* Search Overlay */}
+      <SearchOverlay open={isSearchOpen} onOpenChange={handleSearchOpenChange} />
 
       {/* Mobile Menu Sheet */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>

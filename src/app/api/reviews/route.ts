@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { productId, userId, authorName, rating, comment } = body
+    const { productId, userId, authorName, rating, comment, email, verifiedPurchase } = body
 
     if (!productId || !authorName || !rating || !comment) {
       return NextResponse.json(
@@ -79,13 +79,52 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
+    // Rate limiting: check if same authorName already reviewed this product
+    const existingReview = await db.review.findUnique({
+      where: {
+        authorName_productId: {
+          authorName: authorName.trim(),
+          productId,
+        },
+      },
+    })
+
+    if (existingReview) {
+      return NextResponse.json(
+        { error: 'You have already reviewed this product' },
+        { status: 409 }
+      )
+    }
+
+    // Verify purchase if email provided
+    let isVerified = false
+    if (email && email.trim()) {
+      const verifyingOrder = await db.order.findFirst({
+        where: {
+          guestEmail: email.toLowerCase().trim(),
+          items: {
+            some: {
+              productId: productId,
+            },
+          },
+        },
+        select: { id: true },
+      })
+      isVerified = !!verifyingOrder
+    }
+
+    // If verifiedPurchase was explicitly passed from client, use that (client-side verification)
+    // Otherwise use server-side verification result
+    const finalVerified = typeof verifiedPurchase === 'boolean' ? verifiedPurchase : isVerified
+
     const review = await db.review.create({
       data: {
         productId,
         userId: userId || null,
-        authorName,
+        authorName: authorName.trim(),
         rating: Number(rating),
-        comment,
+        comment: comment.trim(),
+        verifiedPurchase: finalVerified,
       },
       include: {
         user: { select: { id: true, fullName: true } },
