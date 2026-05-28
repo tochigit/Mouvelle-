@@ -4,6 +4,7 @@ import { Home, Grid3X3, ShoppingBag, Heart, User } from 'lucide-react';
 import { useNavigationStore } from '@/stores/navigation';
 import { useCartStore } from '@/stores/cart';
 import { useWishlistStore } from '@/stores/wishlist';
+import { useHydrated } from '@/hooks/useHydrated';
 import type { PageView } from '@/lib/types';
 
 interface TabItem {
@@ -18,6 +19,7 @@ export default function MobileNav() {
   const navigate = useNavigationStore((s) => s.navigate);
   const cartCount = useCartStore((s) => s.getItemCount());
   const wishlistCount = useWishlistStore((s) => s.items.length);
+  const hydrated = useHydrated();
 
   const tabs: TabItem[] = [
     { icon: Home, label: 'Home', page: 'home' },
@@ -42,7 +44,7 @@ export default function MobileNav() {
       <div className="flex items-center justify-around h-14 pb-[env(safe-area-inset-bottom)]">
         {tabs.map((tab) => {
           const isActive = currentPage === tab.page;
-          const badge = tab.getBadge?.() ?? 0;
+          const badge = hydrated ? (tab.getBadge?.() ?? 0) : 0;
           const Icon = tab.icon;
 
           return (

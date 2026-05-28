@@ -907,3 +907,24 @@ Stage Summary:
 - AnnouncementBar dead code removed
 - .env.example created for developers
 - All lint checks pass
+
+---
+Task ID: 16
+Agent: Main Orchestrator
+Task: Fix runtime errors - useState not defined and hydration mismatch
+
+Work Log:
+- Diagnosed two runtime errors from user's browser console:
+  1. `useState is not defined` in CartPage.tsx (line 26)
+  2. Hydration mismatch in MobileNav.tsx - badge rendering differs between server and client
+- Fixed CartPage.tsx: Added missing `import { useState } from 'react'` at the top of the file
+- Fixed MobileNav.tsx: Added `useHydrated()` hook (already existed in project) to conditionally render badges only after client hydration, preventing SSR/client mismatch
+- The Header.tsx already used `useHydrated()` correctly, but MobileNav was missing it
+- Cleared .next cache to fix compilation loop issue
+- Verified server runs and responds with HTTP 200
+
+Stage Summary:
+- `useState` import added to CartPage.tsx - fixes the ReferenceError
+- MobileNav badges now guarded by `useHydrated()` - fixes hydration mismatch
+- Both fixes use existing patterns in the codebase (useHydrated hook already existed)
+- All lint checks pass
