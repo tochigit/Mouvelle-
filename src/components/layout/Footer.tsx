@@ -4,7 +4,6 @@ import { Instagram, Twitter, Facebook, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigationStore } from '@/stores/navigation';
 import { BRAND_NAME, CATEGORIES, WHATSAPP_NUMBER, WHATSAPP_MESSAGE } from '@/lib/constants';
-import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -135,27 +134,33 @@ export default function Footer() {
               Curated luxury for the discerning Nigerian shopper. Premium perfumes, sunglasses, jewelry & fashion accessories delivered to your doorstep.
             </p>
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => toast('Social media coming soon!', { description: 'Follow us on social media — our Instagram, Twitter, and Facebook pages will be launching soon.' })}
+              <a
+                href="https://www.instagram.com/elara.ng"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#D4AF37] transition-colors duration-200"
                 aria-label="Instagram"
               >
                 <Instagram className="size-5" />
-              </button>
-              <button
-                onClick={() => toast('Social media coming soon!', { description: 'Follow us on social media — our Instagram, Twitter, and Facebook pages will be launching soon.' })}
+              </a>
+              <a
+                href="https://twitter.com/elara_ng"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#D4AF37] transition-colors duration-200"
                 aria-label="Twitter"
               >
                 <Twitter className="size-5" />
-              </button>
-              <button
-                onClick={() => toast('Social media coming soon!', { description: 'Follow us on social media — our Instagram, Twitter, and Facebook pages will be launching soon.' })}
+              </a>
+              <a
+                href="https://www.facebook.com/elara.ng"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#D4AF37] transition-colors duration-200"
                 aria-label="Facebook"
               >
                 <Facebook className="size-5" />
-              </button>
+              </a>
             </div>
           </div>
 

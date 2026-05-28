@@ -513,6 +513,48 @@ async function main() {
   })
   console.log('  ✓ Created addresses')
 
+  // ── Create Promo Codes ───────────────────────────────────
+  await prisma.promoCode.createMany({
+    data: [
+      {
+        code: 'WELCOME10',
+        type: 'percentage',
+        value: 10,
+        minOrder: 1000000, // ₦10,000
+        maxDiscount: 500000, // max ₦5,000 discount
+        usageLimit: 1000,
+        isActive: true,
+      },
+      {
+        code: 'ELARA20',
+        type: 'percentage',
+        value: 20,
+        minOrder: 2000000, // ₦20,000
+        maxDiscount: 1000000, // max ₦10,000 discount
+        usageLimit: 500,
+        isActive: true,
+      },
+      {
+        code: 'FLAT5K',
+        type: 'fixed',
+        value: 500000, // ₦5,000
+        minOrder: 1500000, // ₦15,000
+        usageLimit: 200,
+        isActive: true,
+      },
+      {
+        code: 'LUXURY15',
+        type: 'percentage',
+        value: 15,
+        minOrder: 3000000, // ₦30,000
+        maxDiscount: 1500000, // max ₦15,000 discount
+        usageLimit: 100,
+        isActive: true,
+      },
+    ],
+  })
+  console.log('  ✓ Created promo codes')
+
   console.log('\n🌱 Seeding complete!')
   console.log(`  Products: ${createdProducts.length}`)
   console.log(`  Users: 1 admin + ${customers.length} customers`)

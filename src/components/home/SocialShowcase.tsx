@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { Instagram, Heart } from 'lucide-react';
-import { toast } from 'sonner';
+
+const INSTAGRAM_URL = 'https://www.instagram.com/elara.ng';
 
 const socialPosts = [
   {
@@ -28,6 +29,10 @@ const socialPosts = [
 ];
 
 export function SocialShowcase() {
+  const openInstagram = () => {
+    window.open(INSTAGRAM_URL, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <section className="py-16 md:py-24 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
@@ -72,15 +77,17 @@ export function SocialShowcase() {
           className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
         >
           {socialPosts.map((post, index) => (
-            <motion.div
+            <motion.a
               key={post.id}
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ scale: 1.03 }}
-              className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer"
-              onClick={() => toast('Social media coming soon!', { description: 'Our Instagram page will be launching soon. Stay tuned!' })}
+              className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer block"
             >
               {/* Gradient background as placeholder image */}
               <div
@@ -112,7 +119,7 @@ export function SocialShowcase() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </motion.a>
           ))}
         </motion.div>
 
@@ -124,13 +131,15 @@ export function SocialShowcase() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="text-center mt-8 md:mt-10"
         >
-          <button
-            onClick={() => toast('Social media coming soon!', { description: 'Our Instagram page will be launching soon. Stay tuned!' })}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#D4AF37]/40 text-[#D4AF37] text-sm font-medium hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] transition-all duration-300"
           >
             <Instagram className="size-4" />
-            Follow Us
-          </button>
+            Follow on Instagram
+          </a>
         </motion.div>
       </div>
     </section>

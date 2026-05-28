@@ -157,3 +157,18 @@ model Newsletter {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
+model PromoCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  type        String   @default("percentage") // "percentage" or "fixed"
+  value       Int      // percentage value (e.g. 10 for 10%) or fixed amount in kobo
+  minOrder    Int      @default(0) // minimum order amount in kobo
+  maxDiscount Int?     // max discount amount in kobo (for percentage type)
+  usageLimit  Int?     // total times this code can be used
+  usageCount  Int      @default(0)
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

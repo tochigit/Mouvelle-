@@ -16,6 +16,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import SearchOverlay from './SearchOverlay';
@@ -23,7 +30,7 @@ import SearchOverlay from './SearchOverlay';
 const NAV_LINKS: { label: string; page: string }[] = [
   { label: 'Shop', page: 'shop' },
   { label: 'Collections', page: 'collections' },
-  { label: 'About', page: 'home' },
+  { label: 'About', page: 'about' },
   { label: 'Contact', page: 'contact' },
 ];
 
@@ -31,6 +38,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   const hydrated = useHydrated();
   const { theme, setTheme } = useTheme();
@@ -62,6 +70,9 @@ export default function Header() {
     if (page === 'contact') {
       // Contact opens WhatsApp instead of navigating to a page
       window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`, '_blank');
+    } else if (page === 'about') {
+      // About opens a dialog
+      setIsAboutOpen(true);
     } else {
       navigate(page as Parameters<typeof navigate>[0]);
     }
@@ -269,6 +280,39 @@ export default function Header() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* About Dialog */}
+      <Dialog open={isAboutOpen} onOpenChange={setIsAboutOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl text-[#D4AF37]">
+              About {BRAND_NAME}
+            </DialogTitle>
+            <DialogDescription>
+              Who we are and what we stand for.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              {BRAND_NAME} is Nigeria&apos;s premier online destination for curated luxury accessories. Founded with a passion for making premium fashion accessible, we bring together the finest perfumes, sunglasses, jewelry, and accessories from around the world.
+            </p>
+            <p>
+              Our mission is simple: to help every Nigerian express their unique style through carefully selected, authentic luxury products — delivered with care and excellence.
+            </p>
+            <div className="pt-2">
+              <Button
+                onClick={() => {
+                  setIsAboutOpen(false);
+                  navigate('shop');
+                }}
+                className="bg-[#D4AF37] hover:bg-[#C0A030] text-primary-foreground font-semibold"
+              >
+                Explore Our Collection
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

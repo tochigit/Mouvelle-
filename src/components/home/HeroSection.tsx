@@ -121,9 +121,9 @@ export function HeroSection() {
               size="lg"
               variant="outline"
               className="border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/10 hover:text-[#D4AF37] hover:border-[#D4AF37] font-medium text-sm tracking-wide px-8 h-12 rounded-full bg-transparent"
-              onClick={() => navigate('shop')}
+              onClick={() => navigate('collections')}
             >
-              Explore New Arrivals
+              Explore Collections
             </Button>
           </motion.div>
         </motion.div>
