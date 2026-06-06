@@ -1,5 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireProductionConfig } from '@/lib/config'
+import { assertAdminAccess } from '@/lib/admin-auth'
 
 function slugify(text: string): string {
   return text
@@ -16,6 +18,9 @@ function slugify(text: string): string {
 // GET /api/products — List products with filtering, sorting, search
 export async function GET(request: NextRequest) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const featured = searchParams.get('featured')
@@ -23,11 +28,19 @@ export async function GET(request: NextRequest) {
     const sort = searchParams.get('sort') || 'newest'
     const badge = searchParams.get('badge')
     const inStock = searchParams.get('inStock')
+    const includeArchived = searchParams.get('includeArchived') === 'true'
+    const status = searchParams.get('status')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
     // Build where clause using AND to combine multiple conditions
     const andConditions: Record<string, unknown>[] = []
+
+    if (status) {
+      andConditions.push({ status })
+    } else if (!includeArchived) {
+      andConditions.push({ status: 'active' })
+    }
 
     if (category) {
       andConditions.push({ category })
@@ -145,8 +158,29 @@ export async function GET(request: NextRequest) {
 // POST /api/products — Create a new product
 export async function POST(request: NextRequest) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+    await assertAdminAccess()
+
     const body = await request.json()
-    const { title, description, price, discountPrice, category, tags, featured, badge, stockQuantity, images, variants } = body
+    const {
+      title,
+      slug,
+      description,
+      price,
+      discountPrice,
+      category,
+      tags,
+      featured,
+      badge,
+      stockQuantity,
+      condition,
+      status,
+      seoTitle,
+      seoDescription,
+      images,
+      variants,
+    } = body
 
     if (!title || !description || !price || !category) {
       return NextResponse.json(
@@ -155,10 +189,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const slug = slugify(title)
+    const productSlug = slug ? slugify(slug) : slugify(title)
 
     // Check if slug already exists
-    const existing = await db.product.findUnique({ where: { slug } })
+    const existing = await db.product.findUnique({ where: { slug: productSlug } })
     if (existing) {
       return NextResponse.json({ error: 'A product with this title already exists' }, { status: 409 })
     }
@@ -166,7 +200,7 @@ export async function POST(request: NextRequest) {
     const product = await db.product.create({
       data: {
         title,
-        slug,
+        slug: productSlug,
         description,
         price: Number(price),
         discountPrice: discountPrice ? Number(discountPrice) : null,
@@ -175,6 +209,10 @@ export async function POST(request: NextRequest) {
         featured: featured || false,
         badge: badge || null,
         stockQuantity: stockQuantity || 0,
+        condition: condition || 'new',
+        status: status || 'draft',
+        seoTitle: seoTitle || null,
+        seoDescription: seoDescription || null,
         images: images
           ? {
               create: images.map((img: { imageUrl: string; altText?: string; position?: number }, i: number) => ({

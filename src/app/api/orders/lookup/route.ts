@@ -1,9 +1,13 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireProductionConfig } from '@/lib/config'
 
 // GET /api/orders/lookup?q=ELR-XXXXX or q=email@example.com
 export async function GET(request: NextRequest) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')?.trim()
 

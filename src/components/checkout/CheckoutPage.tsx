@@ -106,9 +106,35 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
-      // Mock Paystack payment delay if paystack is selected
       if (checkoutInfo.paymentMethod === 'paystack') {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const initRes = await fetch('/api/payments/initialize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: checkoutInfo.fullName,
+            email: checkoutInfo.email,
+            phone: checkoutInfo.phone,
+            address: checkoutInfo.address,
+            state: checkoutInfo.state,
+            amount: total,
+            deliveryFee,
+            items: items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              selectedColor: item.selectedColor,
+              selectedSize: item.selectedSize,
+            })),
+            callbackUrl: `${window.location.origin}${window.location.pathname}`,
+          }),
+        });
+
+        const initData = await initRes.json();
+        if (!initRes.ok) {
+          throw new Error(initData.error || 'Unable to initialize Paystack payment');
+        }
+
+        window.location.href = initData.authorizationUrl;
+        return;
       }
 
       const res = await fetch('/api/orders', {
@@ -141,11 +167,7 @@ export default function CheckoutPage() {
       setLastOrder(data.order.id, data.order.orderNumber, checkoutInfo.state);
       clearCart();
 
-      if (checkoutInfo.paymentMethod === 'paystack') {
-        toast.success('Payment successful! Your order has been placed.');
-      } else {
-        toast.success('Order placed successfully!');
-      }
+      toast.success('Order placed successfully!');
 
       navigate('checkout-success');
     } catch (error) {

@@ -1,9 +1,13 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireProductionConfig } from '@/lib/config'
 
 // POST /api/reviews/verify — Verify if an email has purchased a product
 export async function POST(request: NextRequest) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const body = await request.json()
     const { email, productId } = body
 
@@ -14,10 +18,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if there's an Order with guestEmail that has an OrderItem with this productId
+    // Check if there's a non-cancelled order with this product and customer email.
     const order = await db.order.findFirst({
       where: {
         guestEmail: email.toLowerCase().trim(),
+        orderStatus: 'delivered',
+        deliveryConfirmedAt: { not: null },
         items: {
           some: {
             productId: productId,

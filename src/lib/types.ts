@@ -1,4 +1,4 @@
-export type PageView = 'home' | 'shop' | 'collections' | 'product' | 'cart' | 'checkout' | 'checkout-success' | 'account' | 'wishlist';
+export type PageView = 'home' | 'shop' | 'collections' | 'product' | 'cart' | 'checkout' | 'checkout-success' | 'account' | 'wishlist' | 'admin';
 
 export type Category = 'Perfumes' | 'Sunglasses' | 'Jewelry' | 'Fashion Accessories';
 
@@ -41,6 +41,10 @@ export interface Product {
   featured: boolean;
   badge: string | null;
   stockQuantity: number;
+  condition: string;
+  status: string;
+  seoTitle: string | null;
+  seoDescription: string | null;
   images: ProductImage[];
   variants: ProductVariant[];
   reviews: Review[];
@@ -85,6 +89,10 @@ export interface Order {
   orderStatus: OrderStatus;
   shippingAddress?: string;
   shippingState?: string;
+  deliveryConfirmedAt?: string | null;
+  deliveredAt?: string | null;
+  shipmentReference?: string | null;
+  adminNotes?: string | null;
   items: OrderItem[];
   createdAt: string;
 }

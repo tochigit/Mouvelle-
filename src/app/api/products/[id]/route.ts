@@ -1,5 +1,7 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireProductionConfig } from '@/lib/config'
+import { assertAdminAccess } from '@/lib/admin-auth'
 
 function slugify(text: string): string {
   return text
@@ -19,6 +21,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const { id } = await params
 
     const product = await db.product.findUnique({
@@ -64,6 +69,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+    await assertAdminAccess()
+
     const { id } = await params
     const body = await request.json()
 
@@ -72,7 +81,24 @@ export async function PUT(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    const { title, description, price, discountPrice, category, tags, featured, badge, stockQuantity, images, variants } = body
+    const {
+      title,
+      slug,
+      description,
+      price,
+      discountPrice,
+      category,
+      tags,
+      featured,
+      badge,
+      stockQuantity,
+      condition,
+      status,
+      seoTitle,
+      seoDescription,
+      images,
+      variants,
+    } = body
 
     // If title is being changed, update the slug too
     const updateData: Record<string, unknown> = {}
@@ -80,6 +106,7 @@ export async function PUT(
       updateData.title = title
       updateData.slug = slugify(title)
     }
+    if (slug !== undefined) updateData.slug = slugify(slug)
     if (description !== undefined) updateData.description = description
     if (price !== undefined) updateData.price = Number(price)
     if (discountPrice !== undefined) updateData.discountPrice = discountPrice ? Number(discountPrice) : null
@@ -88,6 +115,10 @@ export async function PUT(
     if (featured !== undefined) updateData.featured = featured
     if (badge !== undefined) updateData.badge = badge
     if (stockQuantity !== undefined) updateData.stockQuantity = Number(stockQuantity)
+    if (condition !== undefined) updateData.condition = condition
+    if (status !== undefined) updateData.status = status
+    if (seoTitle !== undefined) updateData.seoTitle = seoTitle || null
+    if (seoDescription !== undefined) updateData.seoDescription = seoDescription || null
 
     // Handle images update: delete existing and create new
     if (images && Array.isArray(images)) {
@@ -135,6 +166,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+    await assertAdminAccess()
+
     const { id } = await params
 
     const existing = await db.product.findUnique({ where: { id } })
@@ -142,9 +177,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    await db.product.delete({ where: { id } })
+    await db.product.update({ where: { id }, data: { status: 'archived' } })
 
-    return NextResponse.json({ message: 'Product deleted successfully' })
+    return NextResponse.json({ message: 'Product archived successfully' })
   } catch (error) {
     console.error('Error deleting product:', error)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })

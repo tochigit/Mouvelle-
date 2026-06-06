@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Product {
@@ -19,6 +20,10 @@ model Product {
   featured      Boolean  @default(false)
   badge         String?  // "NEW ARRIVAL", "BEST SELLER", "SALE"
   stockQuantity Int      @default(0)
+  condition     String   @default("new") // "new", "pre_order", "limited", "vintage"
+  status        String   @default("draft") // "draft", "active", "archived"
+  seoTitle      String?
+  seoDescription String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -31,6 +36,7 @@ model Product {
   @@index([category])
   @@index([featured])
   @@index([slug])
+  @@index([status])
 }
 
 model ProductImage {
@@ -70,6 +76,8 @@ model User {
   reviews     Review[]
   wishlistItems WishlistItem[]
   addresses   Address[]
+  carts       Cart[]
+  notes       CustomerNote[]
 }
 
 model Order {
@@ -86,11 +94,16 @@ model Order {
   orderStatus     String   @default("pending") // "pending", "paid", "processing", "shipped", "delivered", "cancelled"
   shippingAddress String?
   shippingState   String?
+  deliveryConfirmedAt DateTime?
+  deliveredAt      DateTime?
+  shipmentReference String?
+  adminNotes       String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   user  User?  @relation(fields: [userId], references: [id])
   items OrderItem[]
+  activity AnalyticsEvent[]
 }
 
 model OrderItem {
@@ -119,6 +132,22 @@ model WishlistItem {
 
   @@unique([userId, productId])
   @@index([userId])
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String?
+  guestId   String?
+  email     String?
+  items     String   @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([guestId])
+  @@index([email])
 }
 
 model Review {
@@ -169,6 +198,69 @@ model PromoCode {
   usageCount  Int      @default(0)
   expiresAt   DateTime?
   isActive    Boolean  @default(true)
+  campaignType String  @default("standard") // "standard", "giveaway", "flash_sale"
+  bannerTitle String?
+  bannerCopy  String?
+  startsAt    DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model HomepageBanner {
+  id        String   @id @default(cuid())
+  title     String
+  copy      String?
+  imageUrl  String?
+  ctaLabel  String?
+  ctaTarget String?
+  isActive  Boolean  @default(false)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String
+  entityType String?
+  entityId  String?
+  orderId   String?
+  email     String?
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([orderId])
+  @@index([email])
+}
+
+model CustomerNote {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String
+  note      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([userId])
+}
+
+model PendingPayment {
+  id        String   @id @default(cuid())
+  reference String   @unique
+  email     String
+  amount    Int
+  payload   String
+  status    String   @default("initialized")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
 }

@@ -7,6 +7,7 @@ import { useCartStore } from '@/stores/cart';
 import { CATEGORIES, SORT_OPTIONS } from '@/lib/constants';
 import type { Product } from '@/lib/types';
 import ProductCard from '@/components/common/ProductCard';
+import SetupRequired from '@/components/common/SetupRequired';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -44,6 +45,7 @@ export default function ShopPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [configRequired, setConfigRequired] = useState(false);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sort, setSort] = useState('newest');
@@ -87,6 +89,11 @@ export default function ShopPage() {
       if (inStockOnly) params.set('inStock', 'true');
 
       const res = await fetch(`/api/products?${params.toString()}`);
+      if (res.status === 503) {
+        setConfigRequired(true);
+        setProducts([]);
+        return;
+      }
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
 
@@ -115,6 +122,7 @@ export default function ShopPage() {
       }
 
       setProducts(filtered);
+      setConfigRequired(false);
     } catch {
       toast.error('Failed to load products');
     } finally {
@@ -241,6 +249,10 @@ export default function ShopPage() {
       )}
     </div>
   );
+
+  if (configRequired) {
+    return <SetupRequired />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

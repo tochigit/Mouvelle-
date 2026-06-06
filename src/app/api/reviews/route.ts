@@ -1,9 +1,13 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireProductionConfig } from '@/lib/config'
 
 // GET /api/reviews — Get reviews for a product
 export async function GET(request: NextRequest) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get('productId')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -56,12 +60,23 @@ export async function GET(request: NextRequest) {
 // POST /api/reviews — Create a review
 export async function POST(request: NextRequest) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const body = await request.json()
-    const { productId, userId, authorName, rating, comment, email, verifiedPurchase } = body
+    const { productId, userId, authorName, rating, comment, email } = body
 
     if (!productId || !authorName || !rating || !comment) {
       return NextResponse.json(
         { error: 'Missing required fields: productId, authorName, rating, comment' },
+        { status: 400 }
+      )
+    }
+
+    const reviewerEmail = typeof email === 'string' ? email.toLowerCase().trim() : ''
+    if (!reviewerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reviewerEmail)) {
+      return NextResponse.json(
+        { error: 'Enter the email address used for your order before submitting a review' },
         { status: 400 }
       )
     }
@@ -96,26 +111,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify purchase if email provided
-    let isVerified = false
-    if (email && email.trim()) {
-      const verifyingOrder = await db.order.findFirst({
-        where: {
-          guestEmail: email.toLowerCase().trim(),
-          items: {
-            some: {
-              productId: productId,
-            },
+    // Reviews are only accepted from customers with a real order containing this product.
+    const verifyingOrder = await db.order.findFirst({
+      where: {
+        guestEmail: reviewerEmail,
+        orderStatus: 'delivered',
+        deliveryConfirmedAt: { not: null },
+        items: {
+          some: {
+            productId,
           },
         },
-        select: { id: true },
-      })
-      isVerified = !!verifyingOrder
-    }
+      },
+      select: { id: true },
+    })
 
-    // If verifiedPurchase was explicitly passed from client, use that (client-side verification)
-    // Otherwise use server-side verification result
-    const finalVerified = typeof verifiedPurchase === 'boolean' ? verifiedPurchase : isVerified
+    if (!verifyingOrder) {
+      return NextResponse.json(
+        { error: 'We could not verify a completed order for this product and email address' },
+        { status: 403 }
+      )
+    }
 
     const review = await db.review.create({
       data: {
@@ -124,7 +140,7 @@ export async function POST(request: NextRequest) {
         authorName: authorName.trim(),
         rating: Number(rating),
         comment: comment.trim(),
-        verifiedPurchase: finalVerified,
+        verifiedPurchase: true,
       },
       include: {
         user: { select: { id: true, fullName: true } },

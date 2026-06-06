@@ -34,7 +34,17 @@ export function slugify(text: string): string {
 
 export function getDeliveryFee(state: string, subtotal: number = 0): number {
   if (subtotal >= FREE_DELIVERY_THRESHOLD) return 0;
-  return DELIVERY_FEES[state] || DELIVERY_FEES['default'];
+  if (DELIVERY_FEES[state]) return DELIVERY_FEES[state];
+
+  const nearbyStates = ['Ogun', 'Oyo', 'Osun', 'Ondo', 'Ekiti'];
+  const centralStates = ['Abuja', 'Kwara', 'Kogi', 'Niger', 'Edo', 'Delta', 'Anambra', 'Enugu'];
+  const farStates = ['Kano', 'Kaduna', 'Katsina', 'Sokoto', 'Zamfara', 'Yobe', 'Borno', 'Adamawa', 'Taraba'];
+
+  if (nearbyStates.includes(state)) return 2200;
+  if (centralStates.includes(state)) return 2800;
+  if (farStates.includes(state)) return 3800;
+
+  return DELIVERY_FEES['default'];
 }
 
 export function getDeliveryTimeline(state: string): string {

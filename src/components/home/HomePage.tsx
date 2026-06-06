@@ -8,10 +8,10 @@ import { TrendingProducts } from './TrendingProducts';
 import { PromoBanner } from './PromoBanner';
 import { NewArrivals } from './NewArrivals';
 import { TrustBadges } from './TrustBadges';
-import { Testimonials } from './Testimonials';
 import { SocialShowcase } from './SocialShowcase';
 import { Newsletter } from './Newsletter';
 import type { Product } from '@/lib/types';
+import SetupRequired from '@/components/common/SetupRequired';
 
 interface HomePageProps {
   products?: Product[];
@@ -74,6 +74,7 @@ function HomeLoadingSkeleton() {
 export function HomePage({ products: initialProducts }: HomePageProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts || []);
   const [loading, setLoading] = useState(!initialProducts?.length);
+  const [configRequired, setConfigRequired] = useState(false);
 
   useEffect(() => {
     if (initialProducts?.length) return;
@@ -83,6 +84,11 @@ export function HomePage({ products: initialProducts }: HomePageProps) {
     const fetchProducts = async () => {
       try {
         const res = await fetch('/api/products?limit=50');
+        if (res.status === 503) {
+          setConfigRequired(true);
+          setLoading(false);
+          return;
+        }
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
         if (!cancelled) {
@@ -106,6 +112,38 @@ export function HomePage({ products: initialProducts }: HomePageProps) {
     return <HomeLoadingSkeleton />;
   }
 
+  if (configRequired) {
+    return (
+      <main>
+        <HeroSection />
+        <SetupRequired compact />
+      </main>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <main>
+        <HeroSection />
+        <section className="px-4 py-20 sm:px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#D4AF37]">
+              Private Catalogue
+            </p>
+            <h2 className="mt-4 font-serif text-3xl font-bold sm:text-4xl">
+              New collections arriving soon.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted-foreground">
+              The storefront is connected to live inventory. Products will appear here as soon as the admin publishes them.
+            </p>
+          </div>
+        </section>
+        <TrustBadges />
+        <Newsletter />
+      </main>
+    );
+  }
+
   return (
     <main>
       <HeroSection />
@@ -114,7 +152,6 @@ export function HomePage({ products: initialProducts }: HomePageProps) {
       <PromoBanner />
       <NewArrivals products={products} />
       <TrustBadges />
-      <Testimonials />
       <SocialShowcase />
       <Newsletter />
     </main>

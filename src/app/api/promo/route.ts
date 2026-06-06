@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireProductionConfig } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
+    const gate = requireProductionConfig();
+    if (!gate.ok) return gate.response;
+
     const body = await request.json();
     const { code, orderTotal } = body;
 

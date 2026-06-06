@@ -32,6 +32,7 @@ const NAV_LINKS: { label: string; page: string }[] = [
   { label: 'Collections', page: 'collections' },
   { label: 'About', page: 'about' },
   { label: 'Contact', page: 'contact' },
+  { label: 'Admin', page: 'admin' },
 ];
 
 export default function Header() {

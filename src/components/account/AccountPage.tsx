@@ -142,9 +142,36 @@ function OrderTimeline({ status }: { status: string }) {
   );
 }
 
-function OrderDetails({ order, onClose }: { order: OrderData; onClose: () => void }) {
+function OrderDetails({
+  order,
+  onClose,
+  onOrderUpdated,
+}: {
+  order: OrderData;
+  onClose: () => void;
+  onOrderUpdated: (order: OrderData) => void;
+}) {
   const statusConfig = STATUS_CONFIG[order.orderStatus] || STATUS_CONFIG.pending;
   const deliveryTimeline = getDeliveryTimeline(order.shippingState || 'default');
+
+  const handleConfirmDelivery = async () => {
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmDelivery: true }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Unable to confirm delivery');
+      }
+      const data = await res.json();
+      onOrderUpdated(data.order);
+      toast.success('Delivery confirmed. Thank you!');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to confirm delivery');
+    }
+  };
 
   return (
     <motion.div
@@ -307,6 +334,18 @@ function OrderDetails({ order, onClose }: { order: OrderData; onClose: () => voi
           </div>
         </div>
       </div>
+
+      {order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled' && (
+        <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-lg p-4 sm:p-5">
+          <h3 className="font-serif text-base font-semibold mb-2">Received your order?</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Confirm delivery once your package has arrived. This unlocks verified product reviews and updates the store records.
+          </p>
+          <Button onClick={handleConfirmDelivery} className="bg-[#D4AF37] hover:bg-[#C0A030] text-primary-foreground">
+            Confirm Delivery
+          </Button>
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -421,6 +460,12 @@ export default function AccountPage() {
     setEmailOrders([]);
     setIsEmailSearch(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOrderUpdated = (order: OrderData) => {
+    setViewedOrder(order);
+    setRecentOrders((prev) => prev.map((item) => (item.id === order.id ? order : item)));
+    setEmailOrders((prev) => prev.map((item) => (item.id === order.id ? order : item)));
   };
 
   const inputType = detectInputType(searchInput);
@@ -543,6 +588,7 @@ export default function AccountPage() {
           {viewedOrder ? (
             <OrderDetails
               order={viewedOrder}
+              onOrderUpdated={handleOrderUpdated}
               onClose={() => {
                 setViewedOrder(null);
                 setSearchInput('');

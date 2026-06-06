@@ -71,12 +71,16 @@ export default function ReviewFormDialog({
       toast.error('Please write a review comment');
       return;
     }
+    if (!email.trim() || !email.includes('@')) {
+      toast.error('Enter the email address used for your order');
+      return;
+    }
 
     setSubmitting(true);
     try {
-      // Verify purchase if email is provided and not already verified
+      // Verify purchase before submitting. The API repeats this check server-side.
       let isVerified = verified;
-      if (email.trim() && verified === null) {
+      if (verified === null) {
         try {
           const verifyRes = await fetch('/api/reviews/verify', {
             method: 'POST',
@@ -92,6 +96,13 @@ export default function ReviewFormDialog({
         }
       }
 
+      if (isVerified !== true) {
+        toast.error('Delivery confirmation required', {
+          description: 'Reviews unlock after this product has been delivered and confirmed.',
+        });
+        return;
+      }
+
       const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,8 +111,7 @@ export default function ReviewFormDialog({
           authorName: authorName.trim(),
           rating,
           comment: comment.trim(),
-          email: email.trim() || undefined,
-          verifiedPurchase: isVerified === true,
+          email: email.trim(),
         }),
       });
 
@@ -144,7 +154,7 @@ export default function ReviewFormDialog({
         <DialogHeader>
           <DialogTitle className="font-serif text-xl">Write a Review</DialogTitle>
           <DialogDescription>
-            Share your experience with this product. Your review helps others make informed decisions.
+            Reviews unlock after a customer has received and confirmed delivery of this product.
           </DialogDescription>
         </DialogHeader>
 
@@ -200,7 +210,7 @@ export default function ReviewFormDialog({
           <div className="space-y-2">
             <Label htmlFor="review-email" className="flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-              Email (for purchase verification)
+              Order Email
             </Label>
             <div className="flex gap-2">
               <Input
@@ -239,11 +249,11 @@ export default function ReviewFormDialog({
             )}
             {verified === false && email.trim() && (
               <p className="text-xs text-muted-foreground">
-                No matching order found. Your review will still be published as a guest review.
+                No confirmed delivery was found for this product. Reviews unlock after delivery confirmation.
               </p>
             )}
             <p className="text-[10px] text-muted-foreground">
-              Optional. Provide the email you used when placing your order to get a verified badge.
+              Required. Use the same email address from your confirmed order.
             </p>
           </div>
 

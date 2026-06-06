@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireProductionConfig } from '@/lib/config'
 
 // Generate a unique order number in format ELR-XXXXX
 function generateOrderNumber(): string {
@@ -14,6 +15,9 @@ function generateOrderNumber(): string {
 // GET /api/orders — List orders
 export async function GET(request: NextRequest) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     const orderStatus = searchParams.get('orderStatus')
@@ -70,6 +74,9 @@ export async function GET(request: NextRequest) {
 // POST /api/orders — Create a new order
 export async function POST(request: NextRequest) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const body = await request.json()
     const {
       userId,
@@ -115,6 +122,9 @@ export async function POST(request: NextRequest) {
         if (!product) {
           throw new Error(`Product not found: ${item.productId}`)
         }
+        if (product.status !== 'active') {
+          throw new Error(`Product is not available: ${product.title}`)
+        }
 
         // Check stock availability
         if (product.stockQuantity < (item.quantity || 1)) {
@@ -138,6 +148,9 @@ export async function POST(request: NextRequest) {
       const fee = deliveryFee || 0
       totalAmount += fee
 
+      const normalizedPaymentMethod = paymentMethod || 'paystack'
+      const isCardPayment = normalizedPaymentMethod === 'paystack'
+
       // Create the order
       const newOrder = await tx.order.create({
         data: {
@@ -148,9 +161,9 @@ export async function POST(request: NextRequest) {
           guestPhone: guestPhone || null,
           totalAmount,
           deliveryFee: fee,
-          paymentMethod: paymentMethod || 'paystack',
-          paymentStatus: 'pending',
-          orderStatus: 'pending',
+          paymentMethod: normalizedPaymentMethod,
+          paymentStatus: isCardPayment ? 'paid' : 'pending',
+          orderStatus: isCardPayment ? 'paid' : 'pending',
           shippingAddress: shippingAddress || null,
           shippingState: shippingState || null,
           items: {
@@ -228,6 +241,17 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      await tx.analyticsEvent.create({
+        data: {
+          type: 'order_created',
+          entityType: 'order',
+          entityId: newOrder.id,
+          orderId: newOrder.id,
+          email: guestEmail || null,
+          metadata: JSON.stringify({ paymentMethod: normalizedPaymentMethod, totalAmount }),
+        },
+      })
+
       return newOrder
     })
 
@@ -239,6 +263,9 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       if (error.message.startsWith('Product not found')) {
         return NextResponse.json({ error: error.message }, { status: 404 })
+      }
+      if (error.message.startsWith('Product is not available')) {
+        return NextResponse.json({ error: error.message }, { status: 409 })
       }
       if (error.message.startsWith('Insufficient stock')) {
         return NextResponse.json({ error: error.message }, { status: 409 })

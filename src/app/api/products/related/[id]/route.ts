@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireProductionConfig } from '@/lib/config'
 
 // GET /api/products/related/[id] — Get related products with weighted scoring
 export async function GET(
@@ -7,6 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const { id } = await params
 
     // Fetch the current product
@@ -26,7 +30,7 @@ export async function GET(
 
     // Fetch all other products with their data for scoring
     const allProducts = await db.product.findMany({
-      where: { id: { not: id } },
+      where: { id: { not: id }, status: 'active' },
       include: {
         images: { orderBy: { position: 'asc' } },
         variants: true,

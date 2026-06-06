@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireProductionConfig } from '@/lib/config'
 
 // GET /api/orders/[id] — Get single order by ID or orderNumber (ELR-XXXXX format)
 export async function GET(
@@ -7,6 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const { id } = await params
 
     // If the id looks like an order number (starts with ELR-), look up by orderNumber
@@ -50,6 +54,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const gate = requireProductionConfig()
+    if (!gate.ok) return gate.response
+
     const { id } = await params
     const body = await request.json()
 
@@ -64,6 +71,13 @@ export async function PUT(
     if (body.paymentMethod !== undefined) updateData.paymentMethod = body.paymentMethod
     if (body.shippingAddress !== undefined) updateData.shippingAddress = body.shippingAddress
     if (body.shippingState !== undefined) updateData.shippingState = body.shippingState
+    if (body.shipmentReference !== undefined) updateData.shipmentReference = body.shipmentReference
+    if (body.adminNotes !== undefined) updateData.adminNotes = body.adminNotes
+    if (body.confirmDelivery === true) {
+      updateData.orderStatus = 'delivered'
+      updateData.deliveryConfirmedAt = new Date()
+      updateData.deliveredAt = new Date()
+    }
 
     // If payment is confirmed, update order status automatically
     if (body.paymentStatus === 'paid' && existing.orderStatus === 'pending') {
@@ -81,6 +95,8 @@ export async function PUT(
                 id: true,
                 title: true,
                 slug: true,
+                price: true,
+                discountPrice: true,
                 images: { take: 1, orderBy: { position: 'asc' } },
               },
             },
@@ -89,6 +105,19 @@ export async function PUT(
         user: { select: { id: true, fullName: true, email: true } },
       },
     })
+
+    if (body.confirmDelivery === true) {
+      await db.analyticsEvent.create({
+        data: {
+          type: 'delivery_confirmed',
+          entityType: 'order',
+          entityId: order.id,
+          orderId: order.id,
+          email: order.guestEmail,
+          metadata: JSON.stringify({ orderNumber: order.orderNumber }),
+        },
+      })
+    }
 
     return NextResponse.json({ order })
   } catch (error) {
