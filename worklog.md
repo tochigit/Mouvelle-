@@ -56,7 +56,7 @@ Agent: Wishlist Page Implementer
 Task: Implement the Wishlist Page
 
 Work Log:
-- Read existing stores: `src/stores/wishlist.ts` (zustand persist middleware, already persists to localStorage as 'elara-wishlist'), `src/stores/navigation.ts` (PageView includes 'wishlist')
+- Read existing stores: `src/stores/wishlist.ts` (zustand persist middleware, already persists to localStorage as 'mouvelle-wishlist'), `src/stores/navigation.ts` (PageView includes 'wishlist')
 - Read `src/app/page.tsx` to understand page routing via switch/case on `currentPage`
 - Read `src/components/cart/CartPage.tsx` for style reference (breadcrumb, font-serif headings, gold accent #D4AF37, empty state pattern)
 - Read `src/components/shop/ShopPage.tsx` for grid layout reference (2-col mobile, 3-4 col desktop, AnimatePresence, loading skeletons)
@@ -78,7 +78,7 @@ Work Log:
 - Updated `src/app/page.tsx`:
   - Added `import WishlistPage from '@/components/wishlist/WishlistPage'`
   - Added `case 'wishlist': return <WishlistPage />` in renderPage switch
-- Verified wishlist store already persists to localStorage (zustand persist middleware with name 'elara-wishlist')
+- Verified wishlist store already persists to localStorage (zustand persist middleware with name 'mouvelle-wishlist')
 - Lint passes with no errors
 - Dev server compiles successfully
 
@@ -235,7 +235,7 @@ Part 2: Make Footer Links Navigable
   - "Contact Us" → opens WhatsApp with pre-filled message
   - "WhatsApp Support" → kept existing WhatsApp link
 - Company links now open informational dialogs:
-  - "About ÈLARA" → brand description and mission
+  - "About Mouvelle'" → brand description and mission
   - "Our Story" → founding narrative
   - "Sustainability" → eco-friendly practices and commitments
   - "Press" → media inquiry information
@@ -733,7 +733,7 @@ Part 2: Audit All Clickable Elements
    - Added `toast` import from sonner
 
 2. **SocialShowcase "Follow Us" and social post cards** — FIXED:
-   - "Follow Us" button was linking to `https://instagram.com/elara.ng` (non-existent page)
+   - "Follow Us" button was linking to `https://instagram.com/mouvelle.ng` (non-existent page)
    - Changed from `<a>` to `<button>` that shows "Social media coming soon!" toast
    - Social post grid cards (gradient placeholders) had `cursor-pointer` but did nothing on click
    - Added `onClick` handler to show "Social media coming soon!" toast
@@ -856,8 +856,8 @@ Work Log:
 
 Fixes Applied:
 1. SocialShowcase - Replaced "coming soon" toast with actual Instagram links:
-   - Changed social grid items from `<motion.div onClick={toast}>` to `<motion.a href="https://instagram.com/elara.ng">`
-   - Changed "Follow Us" button from `<button onClick={toast}>` to `<a href="https://instagram.com/elara.ng">`
+   - Changed social grid items from `<motion.div onClick={toast}>` to `<motion.a href="https://instagram.com/mouvelle.ng">`
+   - Changed "Follow Us" button from `<button onClick={toast}>` to `<a href="https://instagram.com/mouvelle.ng">`
    - Removed `toast` import (no longer needed)
 
 2. Footer social icons - Replaced "coming soon" toast buttons with actual social media links:
@@ -871,7 +871,7 @@ Fixes Applied:
      - POST handler validates promo code, checks expiry, usage limits, minimum order
      - Calculates discount (percentage or fixed amount)
      - Returns discount amount and message
-   - Seeded 4 promo codes: WELCOME10, ELARA20, FLAT5K, LUXURY15
+   - Seeded 4 promo codes: WELCOME10, MOUVELLE20, FLAT5K, LUXURY15
    - Updated CartPage with promo code state management:
      - Added promoCode, promoLoading, promoResult state
      - Apply button calls /api/promo API

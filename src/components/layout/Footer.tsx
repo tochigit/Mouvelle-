@@ -32,7 +32,7 @@ const HELP_LINKS: { label: string; action: HelpLinkAction }[] = [
 ];
 
 const COMPANY_LINKS: { label: string; key: string }[] = [
-  { label: 'About ÈLARA', key: 'about' },
+  { label: "About Mouvelle'", key: 'about' },
   { label: 'Our Story', key: 'story' },
   { label: 'Sustainability', key: 'sustainability' },
   { label: 'Press', key: 'press' },
@@ -44,7 +44,7 @@ const DIALOG_CONTENT: Record<DialogKey, { title: string; description: string; bo
   shipping: {
     title: 'Shipping Information',
     description: 'Learn about our delivery options and timelines.',
-    body: `At ÈLARA, we deliver luxury right to your doorstep across Nigeria.\n\n• Lagos: 1–2 business days (₦1,500)\n• Ogun: 2–3 business days (₦2,000)\n• Abuja & Rivers: 2–4 business days (₦2,500)\n• Other states: 3–5 business days (₦3,000)\n\nFree delivery on orders over ₦30,000!\n\nAll orders are carefully packaged to ensure your items arrive in perfect condition. You will receive a tracking number once your order ships.`,
+    body: `At Mouvelle', we deliver luxury right to your doorstep across Nigeria.\n\n• Lagos: 1–2 business days (₦1,500)\n• Ogun: 2–3 business days (₦2,000)\n• Abuja & Rivers: 2–4 business days (₦2,500)\n• Other states: 3–5 business days (₦3,000)\n\nFree delivery on orders over ₦30,000!\n\nAll orders are carefully packaged to ensure your items arrive in perfect condition. You will receive a tracking number once your order ships.`,
   },
   returns: {
     title: 'Returns & Exchanges',
@@ -53,38 +53,38 @@ const DIALOG_CONTENT: Record<DialogKey, { title: string; description: string; bo
   },
   faqs: {
     title: 'Frequently Asked Questions',
-    description: 'Answers to common questions about shopping with ÈLARA.',
+    description: "Answers to common questions about shopping with Mouvelle'.",
     body: `Q: How do I track my order?\nA: Once your order ships, you will receive a tracking number via email or SMS.\n\nQ: What payment methods do you accept?\nA: We accept Paystack (card/bank transfer) and Pay on Delivery.\n\nQ: Is cash on delivery available?\nA: Yes! Select "Pay on Delivery" at checkout.\n\nQ: How long does delivery take?\nA: 1–5 business days depending on your location.\n\nQ: Can I return an item?\nA: Yes, within 7 days of delivery. See our Returns & Exchanges policy.\n\nQ: Are your products authentic?\nA: Absolutely. We source directly from authorized distributors and brands.`,
   },
   about: {
-    title: 'About ÈLARA',
+    title: "About Mouvelle'",
     description: 'Who we are and what we stand for.',
-    body: `ÈLARA is Nigeria's premier online destination for curated luxury accessories. Founded with a passion for making premium fashion accessible, we bring together the finest perfumes, sunglasses, jewelry, and accessories from around the world.\n\nOur mission is simple: to help every Nigerian express their unique style through carefully selected, authentic luxury products — delivered with care and excellence.`,
+    body: `Mouvelle' is Nigeria's premier online destination for curated luxury accessories. Founded with a passion for making premium fashion accessible, we bring together the finest perfumes, sunglasses, jewelry, and accessories from around the world.\n\nOur mission is simple: to help every Nigerian express their unique style through carefully selected, authentic luxury products — delivered with care and excellence.`,
   },
   story: {
     title: 'Our Story',
     description: 'The journey behind the brand.',
-    body: `ÈLARA was born from a simple observation: Nigerians deserve better access to authentic luxury fashion without the hassle of international shipping or inflated prices.\n\nWhat started as a small curated collection has grown into a trusted destination for thousands of discerning shoppers across the country. Every product in our store is hand-selected for quality, style, and authenticity.\n\nOur name, ÈLARA, reflects our commitment to elegance and sophistication — values that guide every decision we make.`,
+    body: `Mouvelle' was born from a simple observation: Nigerians deserve better access to authentic luxury fashion without the hassle of international shipping or inflated prices.\n\nWhat started as a small curated collection has grown into a trusted destination for thousands of discerning shoppers across the country. Every product in our store is hand-selected for quality, style, and authenticity.\n\nOur name, Mouvelle', reflects our commitment to elegance and sophistication — values that guide every decision we make.`,
   },
   sustainability: {
     title: 'Sustainability',
     description: 'Our commitment to a better future.',
-    body: `At ÈLARA, we believe luxury and responsibility go hand in hand.\n\n• Eco-friendly packaging: We use recyclable and biodegradable packaging materials\n• Ethical sourcing: We partner with brands that uphold fair labor practices\n• Carbon-conscious shipping: We optimize delivery routes to reduce emissions\n• Community impact: A portion of every sale supports local artisan programs\n\nWe are continuously working to reduce our environmental footprint while delivering the premium experience you expect.`,
+    body: `At Mouvelle', we believe luxury and responsibility go hand in hand.\n\n• Eco-friendly packaging: We use recyclable and biodegradable packaging materials\n• Ethical sourcing: We partner with brands that uphold fair labor practices\n• Carbon-conscious shipping: We optimize delivery routes to reduce emissions\n• Community impact: A portion of every sale supports local artisan programs\n\nWe are continuously working to reduce our environmental footprint while delivering the premium experience you expect.`,
   },
   press: {
     title: 'Press',
-    description: 'ÈLARA in the news and media.',
-    body: `Interested in featuring ÈLARA? We'd love to hear from you.\n\nFor press inquiries, collaborations, or media kits, please reach out to us via WhatsApp or email.\n\nWe've been featured in leading Nigerian fashion and lifestyle publications, and we're always open to sharing our story and vision for accessible luxury in Africa.`,
+    description: "Mouvelle' in the news and media.",
+    body: `Interested in featuring Mouvelle'? We'd love to hear from you.\n\nFor press inquiries, collaborations, or media kits, please reach out to us via WhatsApp or email.\n\nWe've been featured in leading Nigerian fashion and lifestyle publications, and we're always open to sharing our story and vision for accessible luxury in Africa.`,
   },
   privacy: {
     title: 'Privacy Policy',
     description: 'How we protect and handle your personal information.',
-    body: `Last updated: January 2025\n\nÈLARA is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your personal information.\n\nInformation We Collect:\n• Name, email, and contact details when you create an account or place an order\n• Shipping address for order delivery\n• Payment information (processed securely through Paystack; we do not store card details)\n• Browsing data and cookies to improve your experience\n\nHow We Use Your Information:\n• To process and fulfill your orders\n• To communicate order updates and promotions\n• To improve our website and services\n\nYour Rights:\n• You can request access to, correction of, or deletion of your personal data at any time\n• You can unsubscribe from marketing communications at any time\n\nWe never sell your personal information to third parties.`,
+    body: `Last updated: January 2025\n\nMouvelle' is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your personal information.\n\nInformation We Collect:\n• Name, email, and contact details when you create an account or place an order\n• Shipping address for order delivery\n• Payment information (processed securely through Paystack; we do not store card details)\n• Browsing data and cookies to improve your experience\n\nHow We Use Your Information:\n• To process and fulfill your orders\n• To communicate order updates and promotions\n• To improve our website and services\n\nYour Rights:\n• You can request access to, correction of, or deletion of your personal data at any time\n• You can unsubscribe from marketing communications at any time\n\nWe never sell your personal information to third parties.`,
   },
   terms: {
     title: 'Terms of Service',
     description: 'The terms and conditions governing your use of our services.',
-    body: `Last updated: January 2025\n\nBy using the ÈLARA website and services, you agree to the following terms:\n\n1. Orders: All orders are subject to availability and confirmation. Prices may change without notice.\n\n2. Payment: We accept Paystack and Pay on Delivery. Payment must be completed before items are shipped (except Pay on Delivery orders).\n\n3. Shipping: Delivery times are estimates and may vary. We are not liable for delays caused by carriers or unforeseen circumstances.\n\n4. Returns: Please refer to our Returns & Exchanges policy for full details.\n\n5. Intellectual Property: All content on this website is the property of ÈLARA and may not be reproduced without permission.\n\n6. Limitation of Liability: ÈLARA shall not be liable for any indirect, incidental, or consequential damages arising from the use of our services.\n\nFor questions about these terms, please contact us.`,
+    body: `Last updated: January 2025\n\nBy using the Mouvelle' website and services, you agree to the following terms:\n\n1. Orders: All orders are subject to availability and confirmation. Prices may change without notice.\n\n2. Payment: We accept Paystack and Pay on Delivery. Payment must be completed before items are shipped (except Pay on Delivery orders).\n\n3. Shipping: Delivery times are estimates and may vary. We are not liable for delays caused by carriers or unforeseen circumstances.\n\n4. Returns: Please refer to our Returns & Exchanges policy for full details.\n\n5. Intellectual Property: All content on this website is the property of Mouvelle' and may not be reproduced without permission.\n\n6. Limitation of Liability: Mouvelle' shall not be liable for any indirect, incidental, or consequential damages arising from the use of our services.\n\nFor questions about these terms, please contact us.`,
   },
 };
 
@@ -135,7 +135,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-4">
               <a
-                href="https://www.instagram.com/elara.ng"
+                href="https://www.instagram.com/mouvelle.ng"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#D4AF37] transition-colors duration-200"
@@ -144,7 +144,7 @@ export default function Footer() {
                 <Instagram className="size-5" />
               </a>
               <a
-                href="https://twitter.com/elara_ng"
+                href="https://twitter.com/mouvelle_ng"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#D4AF37] transition-colors duration-200"
@@ -153,7 +153,7 @@ export default function Footer() {
                 <Twitter className="size-5" />
               </a>
               <a
-                href="https://www.facebook.com/elara.ng"
+                href="https://www.facebook.com/mouvelle.ng"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#D4AF37] transition-colors duration-200"

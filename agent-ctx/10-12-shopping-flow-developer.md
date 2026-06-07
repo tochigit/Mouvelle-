@@ -1,7 +1,7 @@
-# Task 10-12: Shopping Flow Developer - Work Log
+﻿# Task 10-12: Shopping Flow Developer - Work Log
 
 ## Summary
-Built the complete shopping flow for the ÈLARA luxury e-commerce platform including Shop Page, Product Detail Page, Cart Sidebar, Cart Page, Checkout Page, and Order Confirmation.
+Built the complete shopping flow for the Mouvelle' luxury e-commerce platform including Shop Page, Product Detail Page, Cart Sidebar, Cart Page, Checkout Page, and Order Confirmation.
 
 ## Files Created
 
@@ -111,3 +111,4 @@ Built the complete shopping flow for the ÈLARA luxury e-commerce platform inclu
 - All stores (navigation, cart, wishlist) properly integrated
 - All API endpoints (`/api/products`, `/api/products/[id]`, `/api/orders`) working correctly
 - Lint passes with zero errors
+

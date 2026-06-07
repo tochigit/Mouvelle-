@@ -11,9 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ÈLARA — Curated Luxury. Delivered.",
+  title: "Mouvelle' — Curated Luxury. Delivered.",
   description: "Premium perfumes, sunglasses, jewelry, and fashion accessories. Modern luxury for the discerning Nigerian shopper.",
-  keywords: ["luxury", "fashion", "perfumes", "sunglasses", "jewelry", "Nigeria", "ÈLARA"],
+  keywords: ["luxury", "fashion", "perfumes", "sunglasses", "jewelry", "Nigeria", "Mouvelle'"],
 };
 
 export default function RootLayout({

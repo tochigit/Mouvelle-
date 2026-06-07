@@ -1,9 +1,9 @@
-export const BRAND_NAME = "ÈLARA";
+export const BRAND_NAME = "Mouvelle'";
 export const BRAND_TAGLINE = "Curated Luxury. Delivered.";
 export const BRAND_CURRENCY = "₦";
 export const FREE_DELIVERY_THRESHOLD = 30000;
 export const WHATSAPP_NUMBER = "+2348000000000";
-export const WHATSAPP_MESSAGE = "Hello ÈLARA! I'd like to inquire about a product.";
+export const WHATSAPP_MESSAGE = "Hello Mouvelle'! I'd like to inquire about a product.";
 
 export const DELIVERY_FEES: Record<string, number> = {
   "Lagos": 1500,

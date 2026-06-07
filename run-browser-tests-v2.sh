@@ -1,11 +1,11 @@
 #!/bin/bash
-# Comprehensive ÈLARA browser test script v2
+# Comprehensive Mouvelle' browser test script v2
 cd /home/z/my-project
 
 # Kill any existing server and start fresh
 pkill -f "server.js" 2>/dev/null || true
 sleep 2
-node .next/standalone/server.js > /tmp/elara-server.log 2>&1 &
+node .next/standalone/server.js > /tmp/mouvelle-server.log 2>&1 &
 SERVER_PID=$!
 echo "Server PID: $SERVER_PID"
 sleep 5
@@ -27,7 +27,7 @@ agent-browser wait --load networkidle 2>&1 || true
 agent-browser wait 3000 2>&1 || true
 
 echo "============================================================"
-echo "ÈLARA E-COMMERCE APP - BROWSER CONSOLE ERROR TESTS"
+echo "Mouvelle' E-COMMERCE APP - BROWSER CONSOLE ERROR TESTS"
 echo "============================================================"
 
 # ============================================================
@@ -271,9 +271,9 @@ echo "  Console Warnings: ${CONSOLE:-None}"
 # Also try opening the cart sidebar via the store
 agent-browser eval "
   // Try to find the Zustand cart store and open the sidebar
-  // The store is persisted under 'elara-cart' key
+  // The store is persisted under 'mouvelle-cart' key
   try {
-    const cartData = JSON.parse(localStorage.getItem('elara-cart'));
+    const cartData = JSON.parse(localStorage.getItem('mouvelle-cart'));
     'Cart data: ' + JSON.stringify(cartData).substring(0, 100);
   } catch(e) {
     'Could not read cart: ' + e.message;

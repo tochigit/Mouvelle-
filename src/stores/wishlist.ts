@@ -41,7 +41,7 @@ export const useWishlistStore = create<WishlistState>()(
       },
     }),
     {
-      name: 'elara-wishlist',
+      name: 'mouvelle-wishlist',
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },

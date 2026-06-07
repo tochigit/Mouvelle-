@@ -1,7 +1,7 @@
-# Task 7-8: UI Components Developer - Work Summary
+﻿# Task 7-8: UI Components Developer - Work Summary
 
 ## Task
-Build layout components and common reusable components for the ÈLARA luxury e-commerce platform.
+Build layout components and common reusable components for the Mouvelle' luxury e-commerce platform.
 
 ## Files Created
 
@@ -29,3 +29,4 @@ Build layout components and common reusable components for the ÈLARA luxury e-c
 
 ## Lint Status
 ✅ Zero errors after all fixes
+

@@ -1,10 +1,10 @@
-# Task 3 - Account Page Implementer
+﻿# Task 3 - Account Page Implementer
 
 ## Task: Implement the Account/Order Tracking Page
 
 ## Work Summary
 
-Successfully implemented the Account/Order Tracking page for the ÈLARA e-commerce project.
+Successfully implemented the Account/Order Tracking page for the Mouvelle' e-commerce project.
 
 ### Files Created
 - `src/app/api/orders/lookup/[orderNumber]/route.ts` — API endpoint to fetch order by orderNumber
@@ -20,3 +20,4 @@ Successfully implemented the Account/Order Tracking page for the ÈLARA e-commer
 4. Auto-populates search from order store's lastOrderNumber for seamless flow from OrderConfirmation
 
 ### Status: COMPLETED
+

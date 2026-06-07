@@ -239,7 +239,7 @@ export default function CollectionsPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-[#D4AF37] text-xs sm:text-sm uppercase tracking-[0.3em] font-medium mb-4"
             >
-              ÈLARA Curates
+              Mouvelle' Curates
             </motion.p>
 
             {/* Title */}

@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing payment details' }, { status: 400 });
     }
 
-    const reference = `ELARA-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const reference = `MOUVELLE-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
     await db.pendingPayment.create({
       data: {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           customer_name: payload.fullName,
           phone: payload.phone,
-          source: 'elara_checkout',
+          source: 'mouvelle_checkout',
         },
       }),
     });

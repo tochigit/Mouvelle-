@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     await sendCommerceEmail({
       toEmail: payload.email,
       toName: payload.fullName,
-      subject: `Your ÈLARA order ${order.orderNumber}`,
+      subject: `Your Mouvelle' order ${order.orderNumber}`,
       templateParams: {
         order_number: order.orderNumber,
         order_total: order.totalAmount,

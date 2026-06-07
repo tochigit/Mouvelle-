@@ -1,7 +1,7 @@
-# Task 2 - Wishlist Page Implementer
+﻿# Task 2 - Wishlist Page Implementer
 
 ## Summary
-Implemented the Wishlist page for the ÈLARA e-commerce project.
+Implemented the Wishlist page for the Mouvelle' e-commerce project.
 
 ## Files Created
 - `src/components/wishlist/WishlistPage.tsx` - Full wishlist page component
@@ -19,7 +19,8 @@ Implemented the Wishlist page for the ÈLARA e-commerce project.
 - Hydration-safe: waits for `_hasHydrated` flag before fetching
 - Framer-motion animations throughout (AnimatePresence, layout, entrance/exit)
 - Gold accent color (#D4AF37) consistent with site theme
-- Wishlist store already persists to localStorage (zustand persist with name 'elara-wishlist')
+- Wishlist store already persists to localStorage (zustand persist with name 'mouvelle-wishlist')
 
 ## Status
 ✅ Complete - All lint checks pass, dev server compiles successfully
+

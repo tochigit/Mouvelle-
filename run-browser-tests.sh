@@ -1,5 +1,5 @@
 #!/bin/bash
-# Comprehensive ÈLARA browser test script
+# Comprehensive Mouvelle' browser test script
 # Starts server, tests all pages, reports errors
 
 set -e
@@ -11,7 +11,7 @@ pkill -f "server.js" 2>/dev/null || true
 sleep 2
 
 # Start server
-node .next/standalone/server.js > /tmp/elara-server.log 2>&1 &
+node .next/standalone/server.js > /tmp/mouvelle-server.log 2>&1 &
 SERVER_PID=$!
 echo "Server PID: $SERVER_PID"
 sleep 5
@@ -19,7 +19,7 @@ sleep 5
 # Verify server is running
 if ! kill -0 $SERVER_PID 2>/dev/null; then
   echo "FATAL: Server failed to start"
-  cat /tmp/elara-server.log
+  cat /tmp/mouvelle-server.log
   exit 1
 fi
 echo "Server started successfully"
@@ -64,7 +64,7 @@ test_page() {
   if ! kill -0 $SERVER_PID 2>/dev/null; then
     echo "  WARNING: Server died during test!"
     # Restart server
-    node .next/standalone/server.js > /tmp/elara-server.log 2>&1 &
+    node .next/standalone/server.js > /tmp/mouvelle-server.log 2>&1 &
     SERVER_PID=$!
     sleep 4
     echo "  Server restarted with PID: $SERVER_PID"

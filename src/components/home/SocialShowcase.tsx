@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Instagram, Heart } from 'lucide-react';
 
-const INSTAGRAM_URL = 'https://www.instagram.com/elara.ng';
+const INSTAGRAM_URL = 'https://www.instagram.com/mouvelle.ng';
 
 const socialPosts = [
   {
@@ -57,7 +57,7 @@ export function SocialShowcase() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-serif text-3xl md:text-4xl lg:text-5xl font-medium text-foreground"
           >
-            @elara.ng
+            @mouvelle.ng
           </motion.h2>
           <motion.div
             initial={{ width: 0 }}
@@ -106,7 +106,7 @@ export function SocialShowcase() {
 
               {/* Decorative element */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#D4AF37]/[0.08] font-serif text-6xl md:text-8xl font-bold select-none">
-                È
+                M
               </div>
 
               {/* Hover overlay */}

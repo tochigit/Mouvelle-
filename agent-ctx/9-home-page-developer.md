@@ -1,7 +1,7 @@
-# Task 9 - Home Page Developer
+﻿# Task 9 - Home Page Developer
 
 ## Summary
-Built all 9 home page section components for the ÈLARA luxury e-commerce platform, plus the HomePage composer component. Also fixed lint errors in other agents' code (ProductDetailPage, Header) to achieve zero-error lint pass.
+Built all 9 home page section components for the Mouvelle' luxury e-commerce platform, plus the HomePage composer component. Also fixed lint errors in other agents' code (ProductDetailPage, Header) to achieve zero-error lint pass.
 
 ## Files Created
 1. `src/components/home/HeroSection.tsx` - Cinematic hero with parallax, staggered animations
@@ -36,3 +36,4 @@ Built all 9 home page section components for the ÈLARA luxury e-commerce platfo
 
 ## Lint Status
 ✅ Zero errors, zero warnings
+
